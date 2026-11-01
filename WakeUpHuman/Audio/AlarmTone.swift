@@ -50,7 +50,10 @@ final class AlarmTone: SoundPlaying {
         }
 
         let renderer = ToneRenderer(sampleRate: sampleRate)
-        let sourceNode = AVAudioSourceNode(format: format) { _, _, frameCount, audioBufferList in
+        // `@Sendable` keeps the block nonisolated. Without it the closure inherits this method's
+        // main-actor isolation, Swift 6 checks that isolation on entry, and Core Audio's render thread
+        // traps in `_dispatch_assert_queue_fail` on the first buffer.
+        let sourceNode = AVAudioSourceNode(format: format) { @Sendable _, _, frameCount, audioBufferList in
             renderer.render(frameCount: Int(frameCount), into: audioBufferList)
         }
         engine.attach(sourceNode)

@@ -74,7 +74,10 @@ final class RainSound: RainPlaying {
         // Fresh seeds every time: the rain is not the same minute of rain on every start.
         let renderer = RainRenderer(
             sampleRate: sampleRate, leftSeed: .random(in: .min ... .max), rightSeed: .random(in: .min ... .max))
-        let sourceNode = AVAudioSourceNode(format: format) { _, _, frameCount, audioBufferList in
+        // `@Sendable` keeps the block nonisolated. Without it the closure inherits this method's
+        // main-actor isolation, Swift 6 checks that isolation on entry, and Core Audio's render thread
+        // traps in `_dispatch_assert_queue_fail` on the first buffer.
+        let sourceNode = AVAudioSourceNode(format: format) { @Sendable _, _, frameCount, audioBufferList in
             renderer.render(frameCount: Int(frameCount), into: audioBufferList)
         }
         engine.attach(sourceNode)
