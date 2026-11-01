@@ -17,8 +17,13 @@ struct StopAlarmIntent: LiveActivityIntent {
         Log.intents.info("stop intent for \(id.uuidString, privacy: .public)")
         try? AlarmManager.shared.stop(id: id)
         #if DEBUG
-            await SpikeFollowUp.record(.stop, alarmID: id)
+            await IntentEventLog.shared.append(IntentEvent(kind: .stop, alarmID: id, date: .now))
         #endif
+        do {
+            try await AppEnvironment.loop.ringEnded(systemAlarmID: id, via: .stop)
+        } catch {
+            Log.intents.error("stop intent could not arm a follow-up: \(error.localizedDescription, privacy: .public)")
+        }
         return .result()
     }
 }
