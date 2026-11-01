@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "build": {
+      "model": "claude-agent/opus",
+      "variant": "xhigh"
+    },
+  },
+  "mcp": {
+    "github": {
+      "type": "local",
+      "command": ["sh", ".agents/scripts/run-github-mcp.sh"]
+    }
+  }
+}

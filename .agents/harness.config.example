@@ -1,0 +1,78 @@
+# .agents/harness.config — the harness's per-machine operational config (ADR-0023).
+# Copy this file to .agents/harness.config and edit it there. That copy is gitignored; if your
+# project's .gitignore predates the rename, add a line reading .agents/harness.config to it.
+# Read by the parallel runner (run-parallel-issues.sh), the review dispatcher
+# (run-review-agent.sh) and the issue and epic slash commands (through harness-mode.sh), all
+# of them through harness_config_load in .agents/scripts/harness-config.sh. It is plain sh,
+# sourced: one VAR=value per line.
+# NOT secrets. The GitHub token stays in .env and is never read from here.
+#
+# Renamed from .agents/parallel.config, which configured only the runner. The rename is forced,
+# not bridged: while only .agents/parallel.config exists, every entry point refuses to run and
+# prints `mv .agents/parallel.config .agents/harness.config`. When both files exist,
+# .agents/harness.config is used and .agents/parallel.config is ignored.
+
+# GitHub or local mode (ADR-0023). Exactly `true` or `false`; unset or empty means `true`.
+# Any other value (a typo such as `flase`) is refused by every entry point, which names it:
+# a typo must neither publish to GitHub nor go silently local.
+#   true  : issues and epics are GitHub issues, reached through the GitHub MCP server, and the
+#           runner pushes branches to origin.
+#   false : local mode. No GitHub API call and no remote read or write (no fetch, no push).
+#           Issues and epics are plan files under .agents/plans/, identified local-<n>, and
+#           the epic branch stays on this machine until you push it yourself.
+# Every command states the active mode before it writes anything.
+USE_GITHUB=true
+
+# Headless agent CLI used to implement each child issue. COMMAND PREFIX: the runner
+# appends the issue prompt as the final quoted positional argument.
+#   Claude Code : claude -p --dangerously-skip-permissions
+#   Codex       : codex exec --full-auto
+#   OpenCode    : opencode run --agent <name>  (agent must be allowed to edit/run)
+AGENT_EXEC_CMD="claude -p --dangerously-skip-permissions"
+
+# Headless agent CLI used for every single-axis agentic reviewer dispatch, on both
+# review paths (ADR-0014): the runner's '--review' action (two dispatches per child)
+# and the interactive gate (/review-branch, /execute-issue Phase 3), all through
+# .agents/scripts/run-review-agent.sh. Same COMMAND PREFIX vocabulary as
+# AGENT_EXEC_CMD above. Empty means "inherit AGENT_EXEC_CMD" — NOT "skip the review":
+# the review gate is never skipped by omission. Set this to a different command prefix
+# to give the reviewer a different model than the implementer (ADR-0012). A review is
+# read-only by definition — prefer a CLI invocation that enforces that, like codex's
+# '-s read-only'; '--ephemeral' also keeps concurrent dispatches from colliding on
+# shared per-user state (the opencode failure mode the dispatcher's retry absorbs).
+#   Codex    : codex exec -s read-only --ephemeral -m <model> -c model_reasoning_effort=high
+#   OpenCode : opencode run --agent <read-only agent> -m <provider/model> --auto
+# REVIEW_AGENT_EXEC_CMD="codex exec -s read-only --ephemeral -m gpt-5.6-luna -c model_reasoning_effort=high"
+REVIEW_AGENT_EXEC_CMD=""
+
+PARALLEL_MAX_CONCURRENCY=3     # issues running at once (each is a full agent process)
+MAX_CHILDREN=12                # hard cap per wave; runner refuses beyond this
+MAX_REWORK_ROUNDS=2            # cap on automatic rework rounds per rejected child;
+                                # 0 disables rework so a rejection simply blocks the child
+WORKTREES_DIR=.worktrees       # gitignored
+BASE_BRANCH=main               # the branch the epic integration branch is cut from
+                                # (children branch off the epic branch, not directly off this)
+
+# EPIC_BRANCH is passed per-run by /execute-epic via '--epic <branch>'; not set here.
+
+EPIC_MERGE_FLAGS="--no-ff"     # how each child merges into the epic branch; --no-ff
+                                # keeps child boundaries for clean revert
+
+# Optional acceptance gate run inside each worktree before commit+push (empty = skip here).
+#   Swift : xcodebuild -scheme KeyCount -destination 'platform=macOS' build
+#   Node  : pnpm lint && pnpm build
+ACCEPTANCE_CMD=""
+
+KEEP_WORKTREES=0               # 1 = keep worktrees on success (debug)
+AGENT_TIMEOUT=1800             # per-issue wall-clock cap (seconds); 0 disables
+REVIEW_TIMEOUT=900             # wall-clock cap on ONE reviewer attempt (seconds), on BOTH
+                                # review paths — every dispatch goes through
+                                # run-review-agent.sh (ADR-0014); 0 disables. Tighter than
+                                # AGENT_TIMEOUT on purpose: a review is one axis over
+                                # pre-materialized inputs. An axis can reach 955s once the
+                                # single startup-collision retry is counted; tune it with the
+                                # env-only REVIEW_RETRIES / REVIEW_RETRY_WINDOW /
+                                # REVIEW_RETRY_DELAY. AGENT_TIMEOUT caps implement/rework only.
+KEEP_CHILD_BRANCHES=0          # 1 = keep a child's branch after it merges into the epic
+                                # branch (default 0 deletes the merged child branch: from
+                                # origin in GitHub mode, the local branch in local mode)

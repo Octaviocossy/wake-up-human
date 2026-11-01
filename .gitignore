@@ -1,0 +1,27 @@
+# Logs
+logs
+*.log
+*.local
+
+.env
+.env.local
+.env.mcp
+
+# Parallel-runner worktrees + the harness's per-machine config. The pre-rename name stays
+# ignored so an un-renamed .agents/parallel.config is never committed either (ADR-0023).
+.worktrees/
+.agents/harness.config
+.agents/parallel.config
+
+# Claude Code machine-local settings
+.claude/settings.local.json
+
+# Editor directories and files
+.vscode/
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
