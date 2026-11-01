@@ -1,13 +1,15 @@
 import SwiftUI
 
 /// The menu-bar panel (`docs/design/panel.html`). Sections are added by later slices in the
-/// prototype's order, top to bottom: notices (#17), Bedtime (#16), next alarm, Alarm list, footer.
+/// prototype's order, top to bottom: notices (#17), Bedtime, next alarm, Alarm list, footer.
 struct PanelView: View {
     let clock: PanelClock
     let alarmStore: AlarmStore
+    let bedtime: BedtimeController
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            BedtimeSection(bedtime: bedtime)
             NextAlarmRow(clock: clock, alarmStore: alarmStore)
             Divider().overlay(PanelStyle.border)
             AlarmListSection(alarmStore: alarmStore)

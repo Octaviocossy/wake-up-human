@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var alarmStore: AlarmStore?
     private var occurrenceScheduler: OccurrenceScheduler?
     private var ringController: RingController?
+    private var bedtimeController: BedtimeController?
     private var systemEvents: SystemEventObserver?
 
     @MainActor
@@ -20,6 +21,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let scheduler = OccurrenceScheduler(store: alarmStore, deadlines: DispatchDeadlineScheduler())
         // Built before the scheduler starts: a launch inside the on-time tolerance can ring at once.
         let ringController = makeRingController(alarmStore: alarmStore)
+        // Bedtime starts off at every launch. A Ring replaces it (spec decision 9), so it is wired
+        // before the scheduler starts.
+        let bedtime = BedtimeController(
+            rain: RainSound(),
+            assertion: IOKitPowerAssertion(kind: .preventSystemSleep, name: "Wake Up Human — Bedtime")
+        )
+        ringController.onRingStarted = { [weak bedtime] in bedtime?.endForRing() }
+        bedtimeController = bedtime
         scheduler.onDue = { [weak ringController] occurrences in ringController?.ring(occurrences, now: Date()) }
         // Here it only logs: the missed notice subscribes to `onMissed` (#17).
         scheduler.onMissed = { missed in Log.alarms.notice("Missed: \(missed.count) Occurrence(s)") }
@@ -39,7 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let panelClock = PanelClock()
         let panelController = PanelController(
             clock: panelClock,
-            rootView: PanelView(clock: panelClock, alarmStore: alarmStore)
+            rootView: PanelView(clock: panelClock, alarmStore: alarmStore, bedtime: bedtime)
         )
         self.panelClock = panelClock
         self.panelController = panelController
@@ -51,6 +60,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         // A Ring cut short by quitting still gives the volume back and releases its power calls.
         ringController?.applicationWillTerminate()
+        // Termination never leaves the keep-awake assertion held or the rain playing.
+        bedtimeController?.turnOff()
         systemEvents?.stop()
     }
 
