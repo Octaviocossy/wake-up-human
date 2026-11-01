@@ -2,17 +2,19 @@ import Foundation
 
 /// Calendar math for Occurrences. Ignores `isArmed`; callers filter.
 struct OccurrenceCalendar: Sendable {
-    var calendar: Calendar = .current
+    /// `.autoupdatingCurrent`, so Occurrences follow the Mac into a new time zone.
+    var calendar: Calendar = .autoupdatingCurrent
 
     /// The first Occurrence of `alarm` strictly after `date`.
     func nextOccurrence(of alarm: Alarm, after date: Date) -> Date? {
+        let time = alarm.time
         if alarm.isOneTime {
-            return next(after: date, matching: DateComponents(hour: alarm.hour, minute: alarm.minute, second: 0))
+            return next(after: date, matching: DateComponents(hour: time.hour, minute: time.minute, second: 0))
         }
         return alarm.weekdays.compactMap { weekday in
             next(
                 after: date,
-                matching: DateComponents(hour: alarm.hour, minute: alarm.minute, second: 0, weekday: weekday.rawValue)
+                matching: DateComponents(hour: time.hour, minute: time.minute, second: 0, weekday: weekday.rawValue)
             )
         }.min()
     }

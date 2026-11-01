@@ -10,7 +10,7 @@ struct AlarmStoreTests {
     @Test func addArmsTheAlarm() {
         let store = AlarmStore(defaults: suite.defaults)
 
-        let alarm = store.add(hour: 7, minute: 0, weekdays: [.monday])
+        let alarm = store.add(time: TimeOfDay(hour: 7, minute: 0), weekdays: [.monday])
 
         #expect(alarm.isArmed)
         #expect(store.alarms == [alarm])
@@ -19,41 +19,40 @@ struct AlarmStoreTests {
     @Test func addKeepsTheListSortedByTime() {
         let store = AlarmStore(defaults: suite.defaults)
 
-        store.add(hour: 8, minute: 30, weekdays: [])
-        store.add(hour: 6, minute: 15, weekdays: [])
-        store.add(hour: 7, minute: 0, weekdays: [])
+        store.add(time: TimeOfDay(hour: 8, minute: 30), weekdays: [])
+        store.add(time: TimeOfDay(hour: 6, minute: 15), weekdays: [])
+        store.add(time: TimeOfDay(hour: 7, minute: 0), weekdays: [])
 
-        #expect(store.alarms.map(\.minuteOfDay) == [375, 420, 510])
+        #expect(store.alarms.map(\.time.minuteOfDay) == [375, 420, 510])
     }
 
     @Test func updateChangesTheTimeAndDaysAndReArmsTheAlarm() throws {
         let store = AlarmStore(defaults: suite.defaults)
-        let alarm = store.add(hour: 7, minute: 0, weekdays: [])
+        let alarm = store.add(time: TimeOfDay(hour: 7, minute: 0), weekdays: [])
         store.setArmed(false, id: alarm.id)
 
-        store.update(id: alarm.id, hour: 9, minute: 5, weekdays: [.saturday, .sunday])
+        store.update(id: alarm.id, time: TimeOfDay(hour: 9, minute: 5), weekdays: [.saturday, .sunday])
 
         let updated = try #require(store.alarms.first)
         #expect(updated.id == alarm.id)
-        #expect(updated.hour == 9)
-        #expect(updated.minute == 5)
+        #expect(updated.time == TimeOfDay(hour: 9, minute: 5))
         #expect(updated.weekdays == [.saturday, .sunday])
         #expect(updated.isArmed)
     }
 
     @Test func updateReSortsTheList() {
         let store = AlarmStore(defaults: suite.defaults)
-        let first = store.add(hour: 6, minute: 0, weekdays: [])
-        store.add(hour: 7, minute: 0, weekdays: [])
+        let first = store.add(time: TimeOfDay(hour: 6, minute: 0), weekdays: [])
+        store.add(time: TimeOfDay(hour: 7, minute: 0), weekdays: [])
 
-        store.update(id: first.id, hour: 9, minute: 0, weekdays: [])
+        store.update(id: first.id, time: TimeOfDay(hour: 9, minute: 0), weekdays: [])
 
-        #expect(store.alarms.map(\.hour) == [7, 9])
+        #expect(store.alarms.map(\.time.hour) == [7, 9])
     }
 
     @Test func setArmedArmsAndDisarms() throws {
         let store = AlarmStore(defaults: suite.defaults)
-        let alarm = store.add(hour: 7, minute: 0, weekdays: [])
+        let alarm = store.add(time: TimeOfDay(hour: 7, minute: 0), weekdays: [])
 
         store.setArmed(false, id: alarm.id)
         #expect(try #require(store.alarms.first).isArmed == false)
@@ -64,8 +63,8 @@ struct AlarmStoreTests {
 
     @Test func deleteRemovesTheAlarm() {
         let store = AlarmStore(defaults: suite.defaults)
-        let kept = store.add(hour: 6, minute: 0, weekdays: [])
-        let removed = store.add(hour: 7, minute: 0, weekdays: [])
+        let kept = store.add(time: TimeOfDay(hour: 6, minute: 0), weekdays: [])
+        let removed = store.add(time: TimeOfDay(hour: 7, minute: 0), weekdays: [])
 
         store.delete(id: removed.id)
 
@@ -74,8 +73,8 @@ struct AlarmStoreTests {
 
     @Test func disarmSwitchesOffOnlyTheGivenAlarms() {
         let store = AlarmStore(defaults: suite.defaults)
-        let first = store.add(hour: 6, minute: 0, weekdays: [])
-        let second = store.add(hour: 7, minute: 0, weekdays: [])
+        let first = store.add(time: TimeOfDay(hour: 6, minute: 0), weekdays: [])
+        let second = store.add(time: TimeOfDay(hour: 7, minute: 0), weekdays: [])
 
         store.disarm(ids: [first.id])
 
@@ -85,8 +84,8 @@ struct AlarmStoreTests {
 
     @Test func theListRoundTripsThroughAFreshStoreOnTheSameDefaults() {
         let store = AlarmStore(defaults: suite.defaults)
-        store.add(hour: 7, minute: 0, weekdays: [.monday, .friday])
-        let disarmed = store.add(hour: 8, minute: 30, weekdays: [])
+        store.add(time: TimeOfDay(hour: 7, minute: 0), weekdays: [.monday, .friday])
+        let disarmed = store.add(time: TimeOfDay(hour: 8, minute: 30), weekdays: [])
         store.setArmed(false, id: disarmed.id)
 
         let reloaded = AlarmStore(defaults: suite.defaults)
@@ -102,14 +101,14 @@ struct AlarmStoreTests {
         #expect(store.alarms.isEmpty)
     }
 
-    @Test func onChangeFiresOncePerMutation() {
+    @Test func onChangeRunsOncePerMutation() {
         let store = AlarmStore(defaults: suite.defaults)
         var changes = 0
         store.onChange = { changes += 1 }
 
-        let alarm = store.add(hour: 7, minute: 0, weekdays: [])
+        let alarm = store.add(time: TimeOfDay(hour: 7, minute: 0), weekdays: [])
         #expect(changes == 1)
-        store.update(id: alarm.id, hour: 8, minute: 0, weekdays: [])
+        store.update(id: alarm.id, time: TimeOfDay(hour: 8, minute: 0), weekdays: [])
         #expect(changes == 2)
         store.setArmed(false, id: alarm.id)
         #expect(changes == 3)
@@ -128,7 +127,7 @@ struct AlarmStoreTests {
             persistedCountAtChange = AlarmStore(defaults: suite.defaults).alarms.count
         }
 
-        store.add(hour: 7, minute: 0, weekdays: [])
+        store.add(time: TimeOfDay(hour: 7, minute: 0), weekdays: [])
 
         #expect(persistedCountAtChange == 1)
     }

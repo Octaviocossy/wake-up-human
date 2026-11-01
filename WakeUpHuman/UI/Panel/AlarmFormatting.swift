@@ -2,7 +2,8 @@ import Foundation
 
 /// The panel's Spanish labels for Alarms, ported from the prototype's script
 /// (`docs/design/panel.html`: `fmt`, `daysLabel`, `whenLabel`, `inLabel`, the editor `hint`).
-/// Product copy stays Spanish (ADR-0024).
+/// They are product content, which S20 does not govern (ADR-0024); the copy is the prototype's,
+/// which governs copy where the spec is silent (spec decision 34).
 enum AlarmFormatting {
     /// The editor's day chips, Monday-first: the one-letter label, and the full name that is the
     /// chip's accessibility label.
@@ -25,8 +26,8 @@ enum AlarmFormatting {
     private static let weekend: Set<Weekday> = [.saturday, .sunday]
 
     /// Zero-padded 24-hour time: `"07:00"`.
-    static func time(hour: Int, minute: Int) -> String {
-        String(format: "%02d:%02d", hour, minute)
+    static func time(_ time: TimeOfDay) -> String {
+        String(format: "%02d:%02d", time.hour, time.minute)
     }
 
     /// The row's second line: `"Una vez"`, `"Todos los días"`, `"Lun a vie"`, `"Sáb y dom"`, or the

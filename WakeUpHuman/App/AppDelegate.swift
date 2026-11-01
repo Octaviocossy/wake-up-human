@@ -8,7 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
     private var alarmStore: AlarmStore?
     private var occurrenceScheduler: OccurrenceScheduler?
-    private var systemObservers: [(center: NotificationCenter, token: any NSObjectProtocol)] = []
+    private var systemEvents: SystemEventObserver?
 
     @MainActor
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -23,7 +23,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         alarmStore.onChange = { [weak scheduler] in scheduler?.alarmsDidChange(now: Date()) }
         self.alarmStore = alarmStore
         occurrenceScheduler = scheduler
-        observeSystem(scheduler)
+        // Around System sleep and wake: a wake evaluates late, so what fell due during the sleep is
+        // reported as missed and never rung (invariant 5).
+        systemEvents = SystemEventObserver(
+            willSleep: { [weak scheduler] in scheduler?.evaluate(now: Date()) },
+            didWake: { [weak scheduler] in scheduler?.evaluate(now: Date(), missedCause: .systemSleep) },
+            clockDidChange: { [weak scheduler] in scheduler?.clockDidChange(now: Date()) }
+        )
         scheduler.start(now: Date())
 
         let panelClock = PanelClock()
@@ -39,44 +45,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     func applicationWillTerminate(_ notification: Notification) {
-        for observer in systemObservers {
-            observer.center.removeObserver(observer.token)
-        }
-        systemObservers.removeAll()
-    }
-
-    /// Re-evaluates the Occurrences around System sleep and wake, and reschedules when the system
-    /// clock or time zone changes. A wake evaluates late, so what fell due during the sleep is
-    /// reported as missed and never rung (invariant 5).
-    @MainActor
-    private func observeSystem(_ scheduler: OccurrenceScheduler) {
-        let workspace = NSWorkspace.shared.notificationCenter
-        let center = NotificationCenter.default
-
-        systemObservers.append(
-            (
-                workspace,
-                workspace.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) {
-                    [weak scheduler] _ in
-                    MainActor.assumeIsolated { scheduler?.evaluate(now: Date()) }
-                }
-            ))
-        systemObservers.append(
-            (
-                workspace,
-                workspace.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) {
-                    [weak scheduler] _ in
-                    MainActor.assumeIsolated { scheduler?.evaluate(now: Date(), missedCause: .systemSleep) }
-                }
-            ))
-        for name in [Notification.Name.NSSystemClockDidChange, .NSSystemTimeZoneDidChange] {
-            systemObservers.append(
-                (
-                    center,
-                    center.addObserver(forName: name, object: nil, queue: .main) { [weak scheduler] _ in
-                        MainActor.assumeIsolated { scheduler?.clockDidChange(now: Date()) }
-                    }
-                ))
-        }
+        systemEvents?.stop()
     }
 }

@@ -37,11 +37,10 @@ struct AlarmListSection: View {
             if editing == .new {
                 AlarmEditor(
                     mode: .new,
-                    hour: 7,
-                    minute: 0,
+                    time: TimeOfDay(hour: 7, minute: 0),  // a new Alarm starts at 07:00, no weekday (decision 35)
                     weekdays: [],
-                    onSave: { hour, minute, weekdays in
-                        alarmStore.add(hour: hour, minute: minute, weekdays: weekdays)
+                    onSave: { time, weekdays in
+                        alarmStore.add(time: time, weekdays: weekdays)
                         editing = nil
                     },
                     onDelete: nil,

@@ -28,6 +28,6 @@ enum TestCalendar {
     static func alarm(
         _ hour: Int, _ minute: Int, weekdays: Set<Weekday> = [], isArmed: Bool = true, id: UUID = UUID()
     ) -> Alarm {
-        Alarm(id: id, hour: hour, minute: minute, weekdays: weekdays, isArmed: isArmed)
+        Alarm(id: id, time: TimeOfDay(hour: hour, minute: minute), weekdays: weekdays, isArmed: isArmed)
     }
 }

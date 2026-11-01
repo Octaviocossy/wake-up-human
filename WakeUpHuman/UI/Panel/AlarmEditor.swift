@@ -10,7 +10,7 @@ struct AlarmEditor: View {
     }
 
     let mode: Mode
-    let onSave: (_ hour: Int, _ minute: Int, _ weekdays: Set<Weekday>) -> Void
+    let onSave: (_ time: TimeOfDay, _ weekdays: Set<Weekday>) -> Void
     let onDelete: (() -> Void)?
     let onCancel: () -> Void
 
@@ -19,10 +19,9 @@ struct AlarmEditor: View {
 
     init(
         mode: Mode,
-        hour: Int,
-        minute: Int,
+        time: TimeOfDay,
         weekdays: Set<Weekday>,
-        onSave: @escaping (_ hour: Int, _ minute: Int, _ weekdays: Set<Weekday>) -> Void,
+        onSave: @escaping (_ time: TimeOfDay, _ weekdays: Set<Weekday>) -> Void,
         onDelete: (() -> Void)?,
         onCancel: @escaping () -> Void
     ) {
@@ -31,7 +30,8 @@ struct AlarmEditor: View {
         self.onDelete = onDelete
         self.onCancel = onCancel
         _time = State(
-            initialValue: Calendar.current.date(bySettingHour: hour, minute: minute, second: 0, of: Date()) ?? Date())
+            initialValue: Calendar.current.date(bySettingHour: time.hour, minute: time.minute, second: 0, of: Date())
+                ?? Date())
         _weekdays = State(initialValue: weekdays)
     }
 
@@ -82,8 +82,8 @@ struct AlarmEditor: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(PanelStyle.accent.opacity(0.5)))
+        .background(EditorColors.card, in: RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(EditorColors.cardOutline))
     }
 
     private func dayChip(weekday: Weekday, letter: String, name: String) -> some View {
@@ -106,13 +106,18 @@ struct AlarmEditor: View {
 
     private func save() {
         let components = Calendar.current.dateComponents([.hour, .minute], from: time)
-        onSave(components.hour ?? 7, components.minute ?? 0, weekdays)
+        onSave(TimeOfDay(hour: components.hour ?? 7, minute: components.minute ?? 0), weekdays)
     }
 }
 
 /// Colours only the editor uses (`docs/design/panel.html`), kept here so `PanelStyle` — which every
 /// slice touching the panel shares — stays untouched.
 private enum EditorColors {
+    /// The editing card: rgba(255,255,255,0.07) with an accent outline at 50 %, one shade above
+    /// `PanelStyle.card` so the card being edited stands out. The prototype governs colour where
+    /// the spec is silent (spec decision 34).
+    static let card = Color.white.opacity(0.07)
+    static let cardOutline = PanelStyle.accent.opacity(0.5)
     static let delete = Color(red: 255 / 255, green: 105 / 255, blue: 97 / 255)  // #ff6961
     static let onAccent = Color(red: 29 / 255, green: 29 / 255, blue: 31 / 255)  // #1d1d1f
 }

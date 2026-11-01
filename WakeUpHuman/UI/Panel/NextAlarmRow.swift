@@ -17,13 +17,15 @@ struct NextAlarmRow: View {
                 Text(
                     AlarmFormatting.whenLabel(of: upcoming.date, now: clock.now, calendar: calendar.calendar)
                         + " "
-                        + AlarmFormatting.time(hour: upcoming.alarm.hour, minute: upcoming.alarm.minute)
+                        + AlarmFormatting.time(upcoming.alarm.time)
                 )
                 .fontWeight(.medium)
                 .foregroundStyle(PanelStyle.primaryText)
                 Spacer(minLength: 0)
                 Text(AlarmFormatting.countdown(from: clock.now, to: upcoming.date))
                     .font(.system(size: 12))
+                    // Secondary, not tertiary: the prototype colours the countdown #a1a1a6, and it
+                    // governs colour where the spec is silent (spec decision 34).
                     .foregroundStyle(PanelStyle.secondaryText)
             } else {
                 Text("ninguna")

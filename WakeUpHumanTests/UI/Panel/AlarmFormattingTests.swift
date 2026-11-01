@@ -5,8 +5,8 @@ import Testing
 
 struct AlarmFormattingTests {
     @Test func timeIsZeroPadded() {
-        #expect(AlarmFormatting.time(hour: 7, minute: 0) == "07:00")
-        #expect(AlarmFormatting.time(hour: 22, minute: 46) == "22:46")
+        #expect(AlarmFormatting.time(TimeOfDay(hour: 7, minute: 0)) == "07:00")
+        #expect(AlarmFormatting.time(TimeOfDay(hour: 22, minute: 46)) == "22:46")
     }
 
     @Test func noWeekdayReadsOnce() {

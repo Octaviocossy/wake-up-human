@@ -13,11 +13,10 @@ struct AlarmRow: View {
         if isEditing {
             AlarmEditor(
                 mode: .edit,
-                hour: alarm.hour,
-                minute: alarm.minute,
+                time: alarm.time,
                 weekdays: alarm.weekdays,
-                onSave: { hour, minute, weekdays in
-                    alarmStore.update(id: alarm.id, hour: hour, minute: minute, weekdays: weekdays)
+                onSave: { time, weekdays in
+                    alarmStore.update(id: alarm.id, time: time, weekdays: weekdays)
                     onFinishEditing()
                 },
                 onDelete: {
@@ -28,7 +27,7 @@ struct AlarmRow: View {
             )
             .padding(.vertical, 2)
         } else {
-            let time = AlarmFormatting.time(hour: alarm.hour, minute: alarm.minute)
+            let time = AlarmFormatting.time(alarm.time)
             HStack(spacing: 8) {
                 Button(action: onEdit) {
                     VStack(alignment: .leading, spacing: 1) {
