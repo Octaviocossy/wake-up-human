@@ -4,7 +4,7 @@
 > Read this before changing canonical types, states, processes, or data contracts.
 >
 > **Last updated:** 2026-10-31
-> **Canonical code:** _not yet documented — list this project's domain source directories here_
+> **Canonical code:** `PhotoAlarm/Alarm/`, `PhotoAlarm/Mission/`, `PhotoAlarm/Vision/`, `PhotoAlarm/Persistence/`
 > **Budget:** notes 600 · warn 81920 · fail 102400 (bytes)
 
 This file holds **this project's own domain vocabulary** and is **owned by the project** — the
@@ -45,7 +45,7 @@ What rings, and how rings group into one morning's wake-up.
 | System alarm | `AlarmKit.Alarm` | *alarm* (unqualified) | Any alarm registered with AlarmKit: an Alarm's weekly registration or a Follow-up. Cancelling a System alarm never edits an Alarm. |
 | Ring | one alerting presentation | *alert*, *fire* | One time a System alarm sounds, drawn by the system with the Stop and "Take photo" buttons. A Ring is not a Wake-up session: only an Alarm occurrence's first Ring opens one. |
 | Follow-up | one-off System alarm | *snooze*, *re-alarm* | A Ring the re-alarm loop schedules shortly after a Ring of an open Wake-up session ends through Stop or "Take photo", capped per session. Only a completed Mission cancels it. It belongs to the session of the Ring it follows and never opens a new one. There is no snooze. |
-| Wake-up session | persisted mission state | *session* (unqualified) | One occurrence of an Alarm, from its first Ring until its Mission is completed, or until its Follow-up window closes and it is abandoned. One per occurrence, never one per Ring; a dead loop does not end it early. |
+| Wake-up session | `WakeUpSession` (persisted by `MissionStateStore`) | *session* (unqualified) | One occurrence of an Alarm, from its first Ring until its Mission is completed, or until its Follow-up window closes and it is abandoned. One per occurrence, never one per Ring; a dead loop does not end it early. |
 
 ### Wake-up mission
 

@@ -23,9 +23,9 @@ Write tests for what you touch, prioritized by how cheaply they catch regression
 
 ## File placement & naming
 
-_Not yet documented — record the project's placement convention once a stack is adopted (e.g.
-co-located `foo.ts` → `foo.test.ts`, or a mirrored `tests/` tree), and its test-naming
-convention._
+Tests live in `PhotoAlarmTests/`, mirroring `PhotoAlarm/`
+(`PhotoAlarm/Mission/WakeUpLoop.swift` → `PhotoAlarmTests/Mission/WakeUpLoopTests.swift`). One
+`struct <Type>Tests` per type; test fakes live in `PhotoAlarmTests/Fakes/`.
 
 Whatever convention is chosen, keep a test next to (or clearly traceable to) the module it
 covers, so a test for domain code is treated as domain code by
@@ -33,8 +33,10 @@ covers, so a test for domain code is treated as domain code by
 
 ## Harness
 
-_Not yet documented — record the test runner(s), assertion library, and any environment
-configuration (e.g. DOM shims, database fixtures) once a stack is adopted._
+Swift Testing (`@Test`, `#expect`, `#require`). AlarmKit, the camera and Vision sit behind the
+`AlarmScheduler` and `ObjectMatcher` protocols and are replaced by fakes; SwiftData tests use
+`ModelConfiguration(isStoredInMemoryOnly: true)`; file-based stores use a unique temporary
+directory. Real alarms and the camera are verified manually on the device.
 
 ## Writing tests
 
@@ -55,8 +57,7 @@ These principles hold regardless of stack:
 
 ## Commands
 
-_Not yet documented — once a runner is adopted, fill in `AGENTS.md` › Commands › `Test:` and
-reference it here rather than duplicating the command._
+See `AGENTS.md` › Commands › `Test:`.
 
 ## Cross-agent applicability
 

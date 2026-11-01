@@ -169,7 +169,12 @@ Run this on the iPhone after M1, after M3, and again after every iOS update.
 - [ ] Stop without a photo: the alarm returns about a minute later
 - [ ] The target object passes in dim morning light
 - [ ] Other objects, including similar bottles, fail
-- [ ] The fallback unlocks after the set number of failures
+- [ ] The fallback unlocks after 5 failed photo checks; 15 correct answers end the alarm
+- [ ] While the mission screen is open no Follow-up rings; locking the phone brings one within about a minute
+- [ ] "Take photo" then leaving the app without a match brings a Follow-up
+- [ ] Photo Alarm is not hidden and does not require Face ID or a passcode to open (AlarmKit alarms of such apps fail silently)
+- [ ] The expiry banner shows the right number of days; reinstall before it reaches 0
+- [ ] Re-run the dismissal table in `docs/alarmkit-findings.md` after each iOS update
 - [ ] Settings > Battery shows no background use for the app
 
 ## Risks and open decisions
@@ -181,20 +186,16 @@ The biggest risk is AlarmKit itself: it is new, and developers have reported ala
 | Alarms stopped ringing after an iOS update ([report](https://origin-devforums.apple.com/forums/thread/809398)) | Re-schedule all alarms on every launch; open the app after each iOS update |
 | Alarm button titles showed raw localization keys after a reboot ([report](https://developer.apple.com/forums/thread/802740)) | Use plain literal strings, no custom localization keys; test after a reboot |
 | Alarm alert did not appear while an app was open in landscape ([report](https://developer.apple.com/forums/thread/806681)) | Keep it on the test checklist; rely on the follow-up loop |
-| The system Stop button cannot be blocked | Re-alarm loop from `StopAlarmIntent` until the mission is done |
-| Free signing expires after 7 days | Paid developer account, or a weekly reinstall reminder |
+| The system Stop button cannot be blocked | Stop and "Take photo" arm a Follow-up; a dismissal that runs no intent ends the loop on purpose (ADR-0025) |
+| Free signing expires after 7 days | In-app expiry banner (red at ≤2 days) and a weekly calendar reminder |
+| A hidden or Face ID-locked app's alarms fail silently (AlarmKit FAQ) | Never hide or lock Photo Alarm; checklist item |
 | Matching fails in low light (false negatives) | Several references, retries, emergency fallback |
 | Matching accepts the wrong object, or a photo of the object | Accepted for personal use; optional label-text check |
 | The object gets lost or thrown away | Emergency fallback; re-register a new object |
 
 **Open decisions**
 
-- [ ] Paid Apple Developer account or free signing?
-- [ ] Does the alarm presentation need a Widget Extension (Live Activity)? Apple's sample ships one; confirm in M1.
-- [ ] Follow-up interval (about 1 minute?) and a maximum number of follow-ups.
-- [ ] Fallback type and how many failures unlock it.
-- [ ] Snooze: allow it, and does it require the photo?
-- [ ] One global object, or an object per alarm later?
+Resolved in `.agents/specs/2026-10-31-photo-alarm-mvp.md`.
 
 ## Notes for Claude Code
 

@@ -52,25 +52,29 @@
 
 ## Testing
 - Full conventions (what to test, file placement, harness usage) are in `.agents/rules/testing.md`. Read it before writing or reviewing tests.
-- _Runner(s) not yet documented — fill in once a stack is adopted._
+- Runner: Swift Testing (`import Testing`), run through `xcodebuild test` on the iPhone 17 simulator.
 
 ## Workspace
-- Package manager: _not yet documented_
-- Runtime: _not yet documented_
-- Apps: _not yet documented_
+- Package manager: none (Xcode project, no third-party packages)
+- Runtime: iOS 26.0+, Swift 6 language mode, Xcode 26
+- Apps: `PhotoAlarm` (iOS app, `PhotoAlarm.xcodeproj`)
 
 ## Commands
-- Dev: _not yet documented_
-- Build: _not yet documented_
-- Lint: _not yet documented_
-- Type check: _not yet documented_
-- Test: _not yet documented_
-- Format: _not yet documented_
-- Check (lint+format): _not yet documented_
+- Dev: open `PhotoAlarm.xcodeproj` in Xcode and run on the iPhone (camera and AlarmKit need a real device)
+- Build: `xcodebuild -scheme PhotoAlarm -destination 'platform=iOS Simulator,name=iPhone 17' build`
+- Lint: `swift format lint --strict --recursive PhotoAlarm PhotoAlarmTests`
+- Type check: covered by Build
+- Test: `xcodebuild -scheme PhotoAlarm -destination 'platform=iOS Simulator,name=iPhone 17' test`
+- Format: `swift format format --in-place --recursive PhotoAlarm PhotoAlarmTests`
+- Check (lint+format): Lint, then Build
 
 ## Verification Quirks
 - The runner, `install-scaffold.sh` and `verify-scaffold.sh` are POSIX `sh`: on Windows, run
   them from Git Bash or WSL.
+- If no `iPhone 17` simulator exists, pick one from `xcrun simctl list devices available` and say
+  so; never change the documented command.
+- `DEVELOPMENT_TEAM` is empty in the committed project until the user selects the Personal Team in
+  Xcode; simulator builds do not need it.
 
 ## Skills
 - A **skill** is a procedure the agent loads on its own when the situation matches its
@@ -244,5 +248,15 @@ Re-running is idempotent (done children are detected from the epic branch).
 `MAX_REWORK_ROUNDS=2`, `KEEP_CHILD_BRANCHES=0`. Override in `.agents/harness.config`.
 
 ## Code Structure
-<!-- TODO: document the framework, router style, key directories, and any import conventions -->
-_None documented yet._
+- `PhotoAlarm/App` — app entry and root routing
+- `PhotoAlarm/Alarm` — AlarmKit scheduler and alarm-button intents
+- `PhotoAlarm/Vision` — object matcher
+- `PhotoAlarm/Camera` — camera-only capture
+- `PhotoAlarm/Mission` — Wake-up session logic
+- `PhotoAlarm/Persistence` — SwiftData models and the mission state store
+- `PhotoAlarm/Features/<Feature>` — screens
+- `PhotoAlarm/Debug` — DEBUG-only spike screens (every file wrapped in `#if DEBUG`)
+- `PhotoAlarm/Support` — logging and helpers
+- `PhotoAlarmTests` — mirrors `PhotoAlarm`
+- `Config/` — the partial Info.plist (outside the synchronized `PhotoAlarm/` folder on purpose, so
+  it is never copied as a resource)
