@@ -1,8 +1,9 @@
 import AlarmKit
 import AppIntents
 
-/// Runs when the user taps "Take photo" on a Ring (the secondary button, `.custom` behavior). It
-/// opens the app; the mission screen itself arrives with the mission child.
+/// Runs when the user taps "Take photo" on a Ring (the secondary button, `.custom` behavior). It arms
+/// a Follow-up exactly like Stop (spec decision 15) and opens the app, whose root view then shows only
+/// the mission screen.
 struct OpenMissionIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Take photo"
     static let supportedModes: IntentModes = .foreground
@@ -18,8 +19,14 @@ struct OpenMissionIntent: LiveActivityIntent {
         Log.intents.info("open-mission intent for \(id.uuidString, privacy: .public)")
         try? AlarmManager.shared.stop(id: id)
         #if DEBUG
-            await SpikeFollowUp.record(.openMission, alarmID: id)
+            await IntentEventLog.shared.append(IntentEvent(kind: .openMission, alarmID: id, date: .now))
         #endif
+        do {
+            try await AppEnvironment.loop.ringEnded(systemAlarmID: id, via: .takePhoto)
+        } catch {
+            Log.intents.error(
+                "open-mission intent could not arm a follow-up: \(error.localizedDescription, privacy: .public)")
+        }
         return .result()
     }
 }

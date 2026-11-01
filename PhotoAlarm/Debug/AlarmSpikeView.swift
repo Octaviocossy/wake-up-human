@@ -11,7 +11,6 @@
         @State private var authorization = AlarmManager.shared.authorizationState
         @State private var systemAlarms: [ScheduledSystemAlarm] = []
         @State private var events: [IntentEvent] = []
-        @State private var followUpsArmed = SpikeFollowUp.armedCount
         @State private var postponeEnabled = false
         @State private var errorMessage: String?
 
@@ -52,23 +51,18 @@
             Section {
                 Button("Alarm in 1 minute") {
                     Task {
-                        SpikeFollowUp.resetCounter()
                         await run { try await scheduler.scheduleOneOff(id: UUID(), at: .now.addingTimeInterval(60)) }
                     }
                 }
                 Button("Weekly alarm in 2 minutes") {
                     Task { await run(scheduleWeeklyInTwoMinutes) }
                 }
-                LabeledContent("Follow-ups armed", value: "\(followUpsArmed) of \(SpikeFollowUp.maxFollowUps)")
-                Button("Reset Follow-up cap") {
-                    SpikeFollowUp.resetCounter()
-                    Task { await refresh() }
-                }
             } header: {
                 Text("Ring tests")
             } footer: {
                 Text(
-                    "Stop and Take photo each arm a Follow-up 60 s out, up to the cap. "
+                    "Stop and Take photo each open a Wake-up session and arm a Follow-up 60 s out, up to the cap, "
+                        + "through the real re-alarm loop. A Match or the Fallback ends it. "
                         + "The weekly alarm repeats every week until cancelled.")
             }
         }
@@ -166,7 +160,6 @@
 
         private func refresh() async {
             authorization = AlarmManager.shared.authorizationState
-            followUpsArmed = SpikeFollowUp.armedCount
             do {
                 systemAlarms = try scheduler.scheduledAlarms()
             } catch {
