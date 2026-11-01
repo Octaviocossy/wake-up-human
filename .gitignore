@@ -26,11 +26,16 @@ logs
 *.sln
 *.sw?
 
-# Xcode
+# XcodeGen-generated project + entitlements, and build artifacts (ADR-0026)
+*.xcodeproj/
+WakeUpHuman/WakeUpHuman.entitlements
 xcuserdata/
 *.xcuserstate
 DerivedData/
+.build/
+.swiftpm/
+
+# Release packaging output (.github/workflows/release.yml)
 build/
-*.ipa
-*.dSYM.zip
-*.dSYM
+dist/
+*.dmg

@@ -9,11 +9,12 @@ points at (ADR-0016). The six files and their owners are listed in `AGENTS.md` â
 A file is domain code if it lives in a canonical domain path or names, exports, imports, or changes a glossary concept.
 
 **Canonical domain code paths for this project:**
-- `PhotoAlarm/Alarm/`
-- `PhotoAlarm/Mission/`
-- `PhotoAlarm/Vision/`
-- `PhotoAlarm/Persistence/`
-- their mirrors under `PhotoAlarmTests/`
+- `WakeUpHuman/Alarms/`
+- `WakeUpHuman/Ring/`
+- `WakeUpHuman/Bedtime/`
+- `WakeUpHuman/Notices/`
+- `WakeUpHuman/Power/`
+- their mirrors under `WakeUpHumanTests/`
 
 ## What belongs in the glossary
 

@@ -1,0 +1,37 @@
+name: CI
+
+# Pull requests only (spec decision 30): the repository is private, macOS runner minutes count
+# ten-fold, and every epic child already builds and tests in the local review gate. In practice CI
+# runs on the epic → main pull request. Never add push or epic/** triggers.
+on:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    # macOS 26 deployment target needs Xcode 26 or later; macos-15 images carry Xcode 16.
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        # WakeUpHuman.xcodeproj is gitignored and generated (ADR-0026).
+        run: xcodegen generate
+
+      - name: Build
+        run: xcodebuild -scheme WakeUpHuman -destination 'platform=macOS' build
+
+      - name: Test
+        run: xcodebuild -scheme WakeUpHuman -destination 'platform=macOS' test

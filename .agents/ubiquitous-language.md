@@ -4,7 +4,7 @@
 > Read this before changing canonical types, states, processes, or data contracts.
 >
 > **Last updated:** 2026-11-01
-> **Canonical code:** none yet — set when the macOS app's domain folders exist
+> **Canonical code:** `WakeUpHuman/Alarms/`, `WakeUpHuman/Ring/`, `WakeUpHuman/Bedtime/`, `WakeUpHuman/Notices/`, `WakeUpHuman/Power/`
 > **Budget:** notes 600 · warn 81920 · fail 102400 (bytes)
 
 This file holds **this project's own domain vocabulary** and is **owned by the project** — the
@@ -55,6 +55,14 @@ What plays while the user falls asleep.
 | Term | Canonical type | Aliases to avoid | Notes |
 |------|----------------|------------------|-------|
 | Bedtime | rain playback + keep-awake mode | *sleep mode*, *rain mode*, *sleep* (unqualified) | The mode that plays generated rain and keeps the Mac out of System sleep until it is switched off or a Ring replaces it. The only thing that keeps the Mac awake, so an Alarm Armed without Bedtime may not ring. Never System sleep itself. |
+
+### Panel
+
+What the menu-bar panel tells the user.
+
+| Term | Canonical type | Aliases to avoid | Notes |
+|------|----------------|------------------|-------|
+| Notice | panel notice | *notification*, *alert*, *warning* | A message at the top of the panel about a missed Occurrence, an unattended Ring, Bedtime off with an Armed Alarm due within 12 hours, or Bedtime on battery; never a system notification. |
 
 ---
 

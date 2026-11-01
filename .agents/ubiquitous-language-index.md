@@ -13,6 +13,7 @@
 | Armed | Alarms |
 | Bedtime | Bedtime |
 | Dismiss | Alarms |
+| Notice | Panel |
 | Occurrence | Alarms |
 | Ring | Alarms |
 | Typing challenge | Alarms |
