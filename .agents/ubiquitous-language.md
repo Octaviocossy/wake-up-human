@@ -4,7 +4,7 @@
 > Read this before changing canonical types, states, processes, or data contracts.
 >
 > **Last updated:** 2026-10-31
-> **Canonical code:** _not yet documented — list this project's domain source directories here_
+> **Canonical code:** `PhotoAlarm/Alarm/`, `PhotoAlarm/Mission/`, `PhotoAlarm/Vision/`, `PhotoAlarm/Persistence/`
 > **Budget:** notes 600 · warn 81920 · fail 102400 (bytes)
 
 This file holds **this project's own domain vocabulary** and is **owned by the project** — the

@@ -25,3 +25,12 @@ logs
 *.njsproj
 *.sln
 *.sw?
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
