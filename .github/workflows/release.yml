@@ -1,0 +1,201 @@
+name: Release
+
+# Packaging runs only when a version is actually cut: a tag push matches no ci.yml trigger, so a
+# release never duplicates the build CI already ran on the merged PR.
+#
+# Tag push  → build, package, publish a GitHub Release with the DMG attached.
+# Dispatch  → build, package, upload the DMG as an artifact. Never touches Releases.
+#
+# Design: .agents/specs/2026-11-01-macos-typing-alarm.md (decision 28) — universal, ad-hoc signed,
+# not notarized: a personal app with no Apple Developer membership.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write # gh release create
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-26
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # --generate-notes needs history back to the previous tag
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Resolve version
+        id: version
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            tag="${GITHUB_REF_NAME}"
+            version="${tag#v}"
+            dmg="WakeUpHuman-${version}.dmg"
+            # CFBundleShortVersionString is not free text. Fail here rather than ship a bundle macOS
+            # considers malformed.
+            if ! printf '%s' "${version}" | grep -Eq '^[0-9]+(\.[0-9]+){0,2}$'; then
+              echo "::error::Tag '${tag}' does not yield a numeric version (got '${version}'). Use vMAJOR.MINOR.PATCH."
+              exit 1
+            fi
+          else
+            tag=""
+            version="0.0.0"
+            # The short SHA identifies the build in the filename, never in MARKETING_VERSION.
+            dmg="WakeUpHuman-0.0.0-$(git rev-parse --short HEAD).dmg"
+          fi
+          {
+            echo "tag=${tag}"
+            echo "version=${version}"
+            echo "build=${GITHUB_RUN_NUMBER}"
+            echo "dmg=${dmg}"
+          } >> "$GITHUB_OUTPUT"
+          echo "Building ${dmg} — MARKETING_VERSION=${version}, CURRENT_PROJECT_VERSION=${GITHUB_RUN_NUMBER}"
+
+      - name: Install tools
+        run: brew install xcodegen create-dmg
+
+      - name: Generate Xcode project
+        # WakeUpHuman.xcodeproj and the entitlements file are gitignored and generated (ADR-0026).
+        run: xcodegen generate
+
+      - name: Test
+        run: xcodebuild -scheme WakeUpHuman -destination 'platform=macOS' test
+
+      - name: Build
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD: ${{ steps.version.outputs.build }}
+        run: |
+          set -euo pipefail
+          # Ad-hoc ("-"), not unsigned: Apple Silicon refuses to launch a binary with no signature at
+          # all. No archive/-exportArchive — without a signing team that is more fragile than useful.
+          xcodebuild -scheme WakeUpHuman -configuration Release \
+            -destination 'generic/platform=macOS' \
+            ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO \
+            MARKETING_VERSION="${VERSION}" CURRENT_PROJECT_VERSION="${BUILD}" \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="-" DEVELOPMENT_TEAM="" \
+            CONFIGURATION_BUILD_DIR="$PWD/build/Release" \
+            build
+
+      - name: Verify the app
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          app="build/Release/WakeUpHuman.app"
+
+          archs="$(lipo -archs "${app}/Contents/MacOS/WakeUpHuman")"
+          echo "archs: ${archs}"
+          for want in arm64 x86_64; do
+            case " ${archs} " in
+              *" ${want} "*) ;;
+              *) echo "::error::Universal build is missing ${want} (got: ${archs})"; exit 1 ;;
+            esac
+          done
+
+          codesign --verify --strict --verbose=2 "${app}"
+          codesign -dv "${app}" 2>&1 | grep -q 'Signature=adhoc' \
+            || { echo "::error::Expected an ad-hoc signature."; exit 1; }
+
+          test -f "${app}/Contents/Resources/AppIcon.icns" \
+            || { echo "::error::App icon missing — is Assets.xcassets committed?"; exit 1; }
+
+          got="$(plutil -extract CFBundleShortVersionString raw "${app}/Contents/Info.plist")"
+          [ "${got}" = "${VERSION}" ] \
+            || { echo "::error::Bundle version is '${got}', expected '${VERSION}'."; exit 1; }
+
+      - name: Package DMG
+        env:
+          DMG: ${{ steps.version.outputs.dmg }}
+        run: |
+          set -euo pipefail
+          mkdir -p build/dmg dist
+          cp -R build/Release/WakeUpHuman.app build/dmg/
+
+          # create-dmg styles its window through AppleScript against Finder, which is flaky on
+          # headless runners. Escalate: retry → --skip-jenkins (drops the icon layout) → plain hdiutil
+          # (unstyled window). Never publish silently; each downgrade is announced.
+          make_dmg() {
+            create-dmg \
+              --volname "Wake Up Human" \
+              --window-pos 200 120 \
+              --window-size 540 380 \
+              --icon-size 128 \
+              --icon "WakeUpHuman.app" 140 190 \
+              --app-drop-link 400 190 \
+              --hide-extension "WakeUpHuman.app" \
+              --no-internet-enable \
+              "$@" \
+              "dist/${DMG}" "build/dmg/"
+          }
+
+          packaged=0
+          for attempt in 1 2 3; do
+            rm -f "dist/${DMG}"
+            if make_dmg; then packaged=1; break; fi
+            echo "create-dmg attempt ${attempt} failed; retrying in 5s"
+            sleep 5
+          done
+
+          if [ "${packaged}" -eq 0 ]; then
+            echo "::warning::create-dmg failed three times; retrying without the AppleScript styling step"
+            rm -f "dist/${DMG}"
+            if make_dmg --skip-jenkins; then packaged=1; fi
+          fi
+
+          if [ "${packaged}" -eq 0 ]; then
+            echo "::warning::create-dmg unusable; falling back to hdiutil — the DMG window will be unstyled"
+            rm -f "dist/${DMG}"
+            ln -sf /Applications build/dmg/Applications
+            hdiutil create -volname "Wake Up Human" -srcfolder build/dmg -ov -format UDZO "dist/${DMG}"
+          fi
+
+      - name: Verify the DMG
+        env:
+          DMG: ${{ steps.version.outputs.dmg }}
+        run: |
+          set -euo pipefail
+          mountpoint="$(mktemp -d)"
+          hdiutil attach "dist/${DMG}" -readonly -nobrowse -mountpoint "${mountpoint}"
+          trap 'hdiutil detach "${mountpoint}" -quiet || true' EXIT
+          ls -la "${mountpoint}"
+          test -d "${mountpoint}/WakeUpHuman.app" \
+            || { echo "::error::WakeUpHuman.app is not inside the DMG."; exit 1; }
+          echo "size: $(du -h "dist/${DMG}" | cut -f1)"
+
+      - name: Publish the GitHub Release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+          DMG: ${{ steps.version.outputs.dmg }}
+        run: |
+          set -euo pipefail
+          # --notes-file supplies the install/Gatekeeper block; --generate-notes appends the
+          # commit-and-PR summary under it.
+          gh release create "${TAG}" "dist/${DMG}" \
+            --title "Wake Up Human ${VERSION}" \
+            --notes-file .github/RELEASE_NOTES_HEADER.md \
+            --generate-notes
+
+      - name: Upload the DMG as an artifact
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.version.outputs.dmg }}
+          path: dist/${{ steps.version.outputs.dmg }}
+          if-no-files-found: error
