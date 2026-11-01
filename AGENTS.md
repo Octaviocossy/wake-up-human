@@ -67,6 +67,7 @@
 - Test: `xcodegen generate && xcodebuild -scheme WakeUpHuman -destination 'platform=macOS' test`
 - Format: `swift format format --in-place --recursive WakeUpHuman WakeUpHumanTests`
 - Check (lint+format): Lint, then Build
+- Release: push a `vMAJOR.MINOR.PATCH` tag — `.github/workflows/release.yml` builds the universal ad-hoc-signed DMG and publishes a GitHub Release; a manual dispatch uploads the DMG as an artifact only
 
 ## Verification Quirks
 - The runner, `install-scaffold.sh` and `verify-scaffold.sh` are POSIX `sh`: on Windows, run
@@ -75,6 +76,8 @@
 - Tests are hosted in the app. `AppDelegate` builds nothing when `AppEnvironment.isRunningTests` is true, so a test run never schedules a real Alarm, plays sound, changes the system volume, takes a power assertion or registers a login item. Keep every new side effect behind that guard.
 - Sound, the volume ramp, System sleep, display wake and the Ring window are verified by hand on the Mac; unit tests cover the logic behind protocols.
 - No `DEVELOPMENT_TEAM` is needed: builds are signed to run locally (ad-hoc).
+- CI (`.github/workflows/ci.yml`) runs on pull requests only, on `macos-26` with the latest stable Xcode (spec decision 30): the repository is private and macOS minutes count ten-fold, so never add push or `epic/**` triggers.
+- The app icon is generated: change the constants in `Tools/make-appicon.swift`, run `swift Tools/make-appicon.swift` and commit the output; never hand-edit `AppIcon.appiconset`.
 
 ## Skills
 - A **skill** is a procedure the agent loads on its own when the situation matches its
