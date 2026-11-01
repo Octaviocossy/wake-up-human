@@ -7,18 +7,22 @@
 > do not copy them here. Number product invariants plainly — `**1. …**`, `**2. …**` — and append,
 > never renumber, so a citation stays stable and never collides with an `S` identifier.
 >
-> **Last updated:** 2026-10-31
+> **Last updated:** 2026-11-01
 > **Budget:** notes 600 · warn 24576 · fail 32768 (bytes)
 
 ---
 
 ## Invariants and relationships
 
-- **1. The app never reads the photo library.** Every Reference and every Photo check comes from a
-  live camera capture. A stored photo of the Target object would complete the Mission without
-  getting out of bed.
-- **2. Mission state is persisted, never held only in memory.** App code runs only in short bursts —
-  scheduling, an alarm-button intent, an opened mission — so a Wake-up session's state must survive
-  the process that wrote it.
-- **3. The app makes no network calls.** No backend, accounts, analytics or sync: Alarms,
-  References and Photo checks never leave the device.
+Numbers 1 and 2 are retired and never reused.
+
+- **3. The app makes no network calls.** No backend, accounts, analytics or sync: Alarms and
+  settings never leave the Mac.
+- **4. A Ring ends only when Dismissed or when its unattended cap runs out.** There is no snooze,
+  and the app offers no Quit while a Ring sounds. Force Quit stays available, deliberately, as the
+  emergency exit when the app itself is broken.
+- **5. An Occurrence never rings late.** One that passes while the Mac is in System sleep or the
+  app is not running is reported as missed, never rung afterwards.
+- **6. Only Bedtime keeps the Mac awake while it waits for an Alarm.** A Ring keeps the display on
+  while it sounds. Nothing else holds a power assertion that prevents sleep, and the app never
+  schedules a wake (ADR-0027).

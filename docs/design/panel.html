@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<title>Panel de alarmas</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style></style>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 640px; height: 960px; position: relative; overflow: hidden; background: #1e2029; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, system-ui, sans-serif; color: #f5f5f7; -webkit-font-smoothing: antialiased">
+  <!-- Barra de menú -->
+  <div style="height: 26px; display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 0 12px; background: rgba(0,0,0,0.38); font-size: 13px; font-weight: 500">
+    <button aria-label="Alarmas" aria-expanded="true" style="position: relative; height: 22px; padding: 0 7px; border: 0; border-radius: 5px; background: rgba(255,255,255,0.22); color: #ffffff; display: flex; align-items: center; cursor: pointer">
+      <sc-if value="{{bedtimeOn}}" hint-placeholder-val="{{ true }}">
+        <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+      </sc-if>
+      <sc-if value="{{bedtimeOff}}" hint-placeholder-val="{{ false }}">
+        <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7"></circle><path d="M12 9.5V13l2.5 1.5"></path><path d="M5 4 2.5 6.5M19 4l2.5 2.5"></path></svg>
+      </sc-if>
+      <sc-if value="{{anyWarning}}" hint-placeholder-val="{{ false }}">
+        <span style="position: absolute; top: 3px; right: 4px; width: 6px; height: 6px; border-radius: 3px; background: #ffd60a; box-shadow: 0 0 0 1.5px #3a3b42"></span>
+      </sc-if>
+    </button>
+    <svg width="17" height="17" sc-camel-view-box="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"></path><circle cx="12" cy="19" r="1" fill="#ffffff"></circle></svg>
+    <div style="display: flex; align-items: center" role="img" aria-label="{{batteryLabel}}">
+      <svg width="27" height="13" sc-camel-view-box="0 0 27 13" aria-hidden="true"><rect x="0.75" y="0.75" width="22.5" height="11.5" rx="3" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.2"></rect><rect x="2.5" y="2.5" width="{{batteryFill}}" height="8" rx="1.6" fill="#ffffff"></rect><path d="M24.8 4.5v4" stroke="rgba(255,255,255,0.55)" stroke-width="1.6" stroke-linecap="round"></path></svg>
+      <sc-if value="{{pluggedIn}}" hint-placeholder-val="{{ true }}">
+        <svg width="10" height="13" sc-camel-view-box="0 0 24 24" fill="#ffffff" aria-hidden="true" style="margin-left: 2px"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg>
+      </sc-if>
+    </div>
+    <span style="font-variant-numeric: tabular-nums">Dom 1 nov&nbsp;&nbsp;22:46</span>
+  </div>
+  <!-- Panel -->
+  <div style="position: absolute; top: 32px; right: 54px; width: 340px; box-sizing: border-box; padding: 10px; border-radius: 14px; background: rgba(42,42,46,0.95); border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 24px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 8px">
+    <!-- Avisos -->
+    <sc-if value="{{showMissed}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; gap: 10px; padding: 11px 12px; border-radius: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08)">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="#ff6961" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path><path d="M4 4l16 16"></path></svg>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <div style="font-size: 13px; font-weight: 600">No sonó la alarma de las 06:15</div>
+          <div style="font-size: 12px; line-height: 1.4; color: #c7c7cc">A esa hora la Mac estaba dormida. Una alarma perdida no suena tarde.</div>
+          <button sc-camel-on-click="{{dismissMissed}}" style="align-self: flex-start; margin-top: 6px; height: 26px; padding: 0 12px; border: 0; border-radius: 6px; background: rgba(255,255,255,0.12); color: #f5f5f7; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer">Entendido</button>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{showUnattended}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; gap: 10px; padding: 11px 12px; border-radius: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08)">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"></path><path d="M10 20.5a2 2 0 0 0 4 0"></path></svg>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <div style="font-size: 13px; font-weight: 600">La alarma de las 08:30 sonó sin respuesta</div>
+          <div style="font-size: 12px; line-height: 1.4; color: #c7c7cc">Sonó los 60 minutos, hasta las 09:30, y se calló sola.</div>
+          <button sc-camel-on-click="{{dismissUnattended}}" style="align-self: flex-start; margin-top: 6px; height: 26px; padding: 0 12px; border: 0; border-radius: 6px; background: rgba(255,255,255,0.12); color: #f5f5f7; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer">Entendido</button>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{showBedOff}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; gap: 10px; padding: 11px 12px; border-radius: 10px; background: rgba(255,214,10,0.10); border: 1px solid rgba(255,214,10,0.28)">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="#ffd60a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M12 3 2 20h20L12 3z"></path><path d="M12 10v4M12 17v.5"></path></svg>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <div style="font-size: 13px; font-weight: 600">Modo dormir apagado</div>
+          <div style="font-size: 12px; line-height: 1.4; color: #d1d1d6">Hay una alarma {{nextText}}. Sin el modo dormir la Mac puede dormirse y la alarma no sonar.</div>
+          <button sc-camel-on-click="{{activateBed}}" style="align-self: flex-start; margin-top: 6px; height: 26px; padding: 0 12px; border: 0; border-radius: 6px; background: #ffd60a; color: #1d1d1f; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Activar modo dormir</button>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{showBattery}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; gap: 10px; padding: 11px 12px; border-radius: 10px; background: rgba(255,214,10,0.10); border: 1px solid rgba(255,214,10,0.28)">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="#ffd60a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><rect x="2" y="7" width="17" height="10" rx="2.5"></rect><path d="M22 10.5v3"></path><path d="M6 12h4"></path></svg>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <div style="font-size: 13px; font-weight: 600">Modo dormir a batería</div>
+          <div style="font-size: 12px; line-height: 1.4; color: #d1d1d6">Enchufá la Mac. Sin corriente puede dormirse igual y la alarma no sonar.</div>
+        </div>
+      </div>
+    </sc-if>
+    <!-- Modo dormir -->
+    <div style="padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="{{bedIconStyle}}">
+          <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="#ffffff" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+          <div style="font-size: 13px; font-weight: 600">Modo dormir</div>
+          <div style="font-size: 12px; color: #a1a1a6">{{bedSub}}</div>
+        </div>
+        <button aria-label="Modo dormir" aria-pressed="{{bedPressed}}" sc-camel-on-click="{{toggleBed}}" style="{{bedTrack}}"><span style="{{bedKnob}}"></span></button>
+      </div>
+      <div style="{{rainRowStyle}}">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M7 12a4 4 0 0 1 .5-8 5 5 0 0 1 9.5 1.5A3.3 3.3 0 0 1 17 12z"></path><path d="M8 15.5v2.5M12 15.5v4M16 15.5v2.5"></path></svg>
+        <label for="rain" style="font-size: 12px; color: #c7c7cc; width: 38px">Lluvia</label>
+        <input id="rain" type="range" min="0" max="100" value="{{rain}}" sc-camel-on-change="{{onRain}}" style="flex: 1; min-width: 0; accent-color: #ffffff; margin: 0">
+        <span style="font-size: 12px; color: #a1a1a6; width: 32px; text-align: right; font-variant-numeric: tabular-nums">{{rainLabel}}</span>
+      </div>
+      <div style="font-size: 12px; line-height: 1.4; color: #a1a1a6">Mantiene la Mac despierta para que la alarma suene. Dejala con la tapa abierta y enchufada.</div>
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 6px; padding: 2px 6px; font-size: 13px">
+      <span style="color: #a1a1a6">Próxima alarma:</span>
+      <span style="font-weight: 500; font-variant-numeric: tabular-nums">{{nextText}}</span>
+      <span style="color: #a1a1a6; margin-left: auto; font-size: 12px; font-variant-numeric: tabular-nums">{{nextIn}}</span>
+    </div>
+    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 2px 6px"></div>
+    <!-- Alarmas -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 2px 0 6px">
+      <span style="font-size: 12px; font-weight: 600; color: #a1a1a6">Alarmas</span>
+      <button sc-camel-on-click="{{addNew}}" aria-label="Nueva alarma" style="width: 28px; height: 28px; border: 0; border-radius: 7px; background: rgba(255,255,255,0.1); color: #f5f5f7; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+      </button>
+    </div>
+    <sc-if value="{{newEditing}}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,159,10,0.5); display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: center; justify-content: space-between">
+          <label for="t-new" style="font-size: 12px; font-weight: 600; color: #a1a1a6">Nueva alarma</label>
+          <input id="t-new" type="time" value="{{newEd.time}}" sc-camel-on-change="{{newEd.onTime}}" style="color-scheme: dark; background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.16); border-radius: 7px; color: #f5f5f7; font: inherit; font-size: 22px; font-weight: 300; padding: 3px 8px; font-variant-numeric: tabular-nums">
+        </div>
+        <fieldset style="border: 0; margin: 0; padding: 0; min-width: 0">
+          <legend style="font-size: 12px; font-weight: 600; color: #a1a1a6; padding: 0; margin-bottom: 8px">Días</legend>
+          <div style="display: flex; justify-content: space-between">
+            <sc-for list="{{newEd.chips}}" as="chip" hint-placeholder-count="7">
+              <button aria-label="{{chip.full}}" aria-pressed="{{chip.pressed}}" sc-camel-on-click="{{chip.toggle}}" style="{{chip.style}}">{{chip.label}}</button>
+            </sc-for>
+          </div>
+          <div style="margin-top: 8px; font-size: 12px; line-height: 1.4; color: #a1a1a6">{{newEd.hint}}</div>
+        </fieldset>
+        <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end">
+          <button sc-camel-on-click="{{newEd.cancel}}" style="height: 28px; padding: 0 14px; border: 0; border-radius: 7px; background: rgba(255,255,255,0.12); color: #f5f5f7; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer">Cancelar</button>
+          <button sc-camel-on-click="{{newEd.save}}" style="height: 28px; padding: 0 14px; border: 0; border-radius: 7px; background: #ff9f0a; color: #1d1d1f; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Agregar</button>
+        </div>
+      </div>
+    </sc-if>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <sc-for list="{{alarms}}" as="item" hint-placeholder-count="3">
+        <sc-if value="{{item.notEditing}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; align-items: center; gap: 8px; padding-right: 4px">
+            <button sc-camel-on-click="{{item.edit}}" aria-label="{{item.editLabel}}" style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 5px 8px; border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer">
+              <span style="{{item.timeStyle}}">{{item.time}}</span>
+              <span style="font-size: 12px; color: #a1a1a6">{{item.daysLabel}}</span>
+            </button>
+            <button aria-label="{{item.switchLabel}}" aria-pressed="{{item.pressed}}" sc-camel-on-click="{{item.toggle}}" style="{{item.track}}"><span style="{{item.knob}}"></span></button>
+          </div>
+        </sc-if>
+        <sc-if value="{{item.isEditing}}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,159,10,0.5); display: flex; flex-direction: column; gap: 12px; margin: 2px 0">
+            <div style="display: flex; align-items: center; justify-content: space-between">
+              <label for="t-edit" style="font-size: 12px; font-weight: 600; color: #a1a1a6">Hora</label>
+              <input id="t-edit" type="time" value="{{item.ed.time}}" sc-camel-on-change="{{item.ed.onTime}}" style="color-scheme: dark; background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.16); border-radius: 7px; color: #f5f5f7; font: inherit; font-size: 22px; font-weight: 300; padding: 3px 8px; font-variant-numeric: tabular-nums">
+            </div>
+            <fieldset style="border: 0; margin: 0; padding: 0; min-width: 0">
+              <legend style="font-size: 12px; font-weight: 600; color: #a1a1a6; padding: 0; margin-bottom: 8px">Días</legend>
+              <div style="display: flex; justify-content: space-between">
+                <sc-for list="{{item.ed.chips}}" as="chip" hint-placeholder-count="7">
+                  <button aria-label="{{chip.full}}" aria-pressed="{{chip.pressed}}" sc-camel-on-click="{{chip.toggle}}" style="{{chip.style}}">{{chip.label}}</button>
+                </sc-for>
+              </div>
+              <div style="margin-top: 8px; font-size: 12px; line-height: 1.4; color: #a1a1a6">{{item.ed.hint}}</div>
+            </fieldset>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <button sc-camel-on-click="{{item.ed.del}}" style="height: 28px; padding: 0 8px; border: 0; border-radius: 7px; background: transparent; color: #ff6961; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer">Eliminar</button>
+              <div style="flex: 1"></div>
+              <button sc-camel-on-click="{{item.ed.cancel}}" style="height: 28px; padding: 0 14px; border: 0; border-radius: 7px; background: rgba(255,255,255,0.12); color: #f5f5f7; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer">Cancelar</button>
+              <button sc-camel-on-click="{{item.ed.save}}" style="height: 28px; padding: 0 14px; border: 0; border-radius: 7px; background: #ff9f0a; color: #1d1d1f; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Guardar</button>
+            </div>
+          </div>
+        </sc-if>
+      </sc-for>
+      <sc-if value="{{emptyList}}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 14px 8px; font-size: 13px; color: #a1a1a6">No hay alarmas. Tocá + para agregar una.</div>
+      </sc-if>
+    </div>
+    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 2px 6px"></div>
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 2px">
+      <button style="height: 26px; padding: 0 6px; border: 0; border-radius: 6px; background: transparent; color: #f5f5f7; font: inherit; font-size: 13px; cursor: pointer">Salir</button>
+      <span style="font-size: 12px; color: #a1a1a6; padding-right: 6px">⌘Q</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;escenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;avisos&quot;,&quot;edicion&quot;,&quot;bateria&quot;],&quot;default&quot;:&quot;normal&quot;},&quot;$preview&quot;:{&quot;width&quot;:640,&quot;height&quot;:960}}">
+var DAYS = [['L','Lunes','lun'],['M','Martes','mar'],['X','Miércoles','mié'],['J','Jueves','jue'],['V','Viernes','vie'],['S','Sábado','sáb'],['D','Domingo','dom']];
+var NOW_DAY = 6;
+var NOW_MIN = 22 * 60 + 46;
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function fmt(min) { return pad(Math.floor(min / 60)) + ':' + pad(min % 60); }
+function daysLabel(d) {
+  var s = d.slice().sort(function (a, b) { return a - b; });
+  if (!s.length) return 'Una vez';
+  if (s.length === 7) return 'Todos los días';
+  var key = s.join('');
+  if (key === '01234') return 'Lun a vie';
+  if (key === '56') return 'Sáb y dom';
+  var txt = s.map(function (i) { return DAYS[i][2]; }).join(', ');
+  return txt.charAt(0).toUpperCase() + txt.slice(1);
+}
+function untilNext(a) {
+  if (!a.days.length) {
+    var t = a.min - NOW_MIN;
+    if (t <= 0) t += 1440;
+    return { t: t, k: (NOW_MIN + t) >= 1440 ? 1 : 0 };
+  }
+  for (var k = 0; k <= 7; k++) {
+    var day = (NOW_DAY + k) % 7;
+    if (a.days.indexOf(day) >= 0) {
+      var tt = k * 1440 + a.min - NOW_MIN;
+      if (tt > 0) return { t: tt, k: k };
+    }
+  }
+  return null;
+}
+function whenLabel(k) {
+  if (k === 0) return 'hoy';
+  if (k === 1) return 'mañana';
+  return DAYS[(NOW_DAY + k) % 7][2];
+}
+function inLabel(t) {
+  var h = Math.floor(t / 60), m = t % 60;
+  return h ? ('en ' + h + ' h ' + m + ' min') : ('en ' + m + ' min');
+}
+function track(on, color) {
+  return 'width: 38px; height: 22px; border-radius: 11px; border: 0; padding: 2px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; transition: background .15s; background: ' + (on ? color : 'rgba(255,255,255,0.2)');
+}
+function knob(on) {
+  return 'width: 18px; height: 18px; border-radius: 9px; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.4); transition: transform .15s; transform: translateX(' + (on ? 16 : 0) + 'px)';
+}
+function chipStyle(on) {
+  return 'width: 38px; height: 38px; border-radius: 19px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; ' +
+    (on ? 'background: #ff9f0a; color: #1d1d1f; border: 1px solid #ff9f0a' : 'background: rgba(255,255,255,0.06); color: #f5f5f7; border: 1px solid rgba(255,255,255,0.18)');
+}
+class Component extends DCLogic {
+  initial(scn) {
+    return {
+      scn: scn,
+      bedtime: scn !== 'avisos',
+      rain: 60,
+      battery: scn === 'bateria',
+      missed: scn === 'avisos',
+      unattended: scn === 'avisos',
+      alarms: [
+        { id: 'a1', min: 420, days: [0, 1, 2, 3, 4], on: true },
+        { id: 'a2', min: 510, days: [5, 6], on: true },
+        { id: 'a3', min: 375, days: [], on: false }
+      ],
+      editing: scn === 'edicion' ? 'a3' : null,
+      draft: scn === 'edicion' ? { min: 375, days: [] } : null,
+      seq: 4
+    };
+  }
+  cur() {
+    var scn = this.props.escenario ?? 'normal';
+    var s = this.state;
+    return (s && s.scn === scn) ? s : this.initial(scn);
+  }
+  upd(p) { this.setState(Object.assign({}, this.cur(), p)); }
+  renderVals() {
+    var self = this;
+    var s = this.cur();
+    var next = null;
+    s.alarms.forEach(function (a) {
+      if (!a.on) return;
+      var u = untilNext(a);
+      if (u && (!next || u.t < next.t)) next = { a: a, t: u.t, k: u.k };
+    });
+    var nextText = next ? (whenLabel(next.k) + ' ' + fmt(next.a.min)) : 'ninguna';
+    var nextIn = next ? inLabel(next.t) : '';
+    var showBedOff = !s.bedtime && !!next && next.t <= 720;
+    var showBattery = s.bedtime && s.battery;
+    function mkEd(isNew) {
+      var d = s.draft;
+      return {
+        time: fmt(d.min),
+        onTime: function (e) {
+          var v = e.target.value;
+          if (!v) return;
+          var p = v.split(':');
+          self.upd({ draft: { min: parseInt(p[0], 10) * 60 + parseInt(p[1], 10), days: d.days } });
+        },
+        chips: DAYS.map(function (D, i) {
+          var on = d.days.indexOf(i) >= 0;
+          return {
+            label: D[0], full: D[1], pressed: on ? 'true' : 'false', style: chipStyle(on),
+            toggle: function () {
+              var nd = on ? d.days.filter(function (x) { return x !== i; }) : d.days.concat([i]);
+              self.upd({ draft: { min: d.min, days: nd } });
+            }
+          };
+        }),
+        hint: d.days.length ? ('Se repite: ' + daysLabel(d.days).toLowerCase() + '.') : 'Sin días: suena una vez y se desarma sola.',
+        cancel: function () { self.upd({ editing: null, draft: null }); },
+        save: function () {
+          var list;
+          if (isNew) {
+            list = s.alarms.concat([{ id: 'a' + s.seq, min: d.min, days: d.days, on: true }]);
+            self.upd({ alarms: list, editing: null, draft: null, seq: s.seq + 1 });
+          } else {
+            list = s.alarms.map(function (x) { return x.id === s.editing ? Object.assign({}, x, { min: d.min, days: d.days, on: true }) : x; });
+            self.upd({ alarms: list, editing: null, draft: null });
+          }
+        },
+        del: function () {
+          self.upd({ alarms: s.alarms.filter(function (x) { return x.id !== s.editing; }), editing: null, draft: null });
+        }
+      };
+    }
+    var sorted = s.alarms.slice().sort(function (a, b) { return a.min - b.min; });
+    var alarms = sorted.map(function (a) {
+      var editing = s.editing === a.id && !!s.draft;
+      return {
+        id: a.id,
+        time: fmt(a.min),
+        daysLabel: daysLabel(a.days),
+        editLabel: 'Editar alarma de las ' + fmt(a.min),
+        switchLabel: 'Alarma de las ' + fmt(a.min),
+        timeStyle: 'font-size: 28px; font-weight: 300; letter-spacing: -0.5px; line-height: 1.1; font-variant-numeric: tabular-nums; color: ' + (a.on ? '#f5f5f7' : '#8e8e93'),
+        pressed: a.on ? 'true' : 'false',
+        track: track(a.on, '#ff9f0a'),
+        knob: knob(a.on),
+        toggle: function () {
+          self.upd({ alarms: s.alarms.map(function (x) { return x.id === a.id ? Object.assign({}, x, { on: !x.on }) : x; }) });
+        },
+        edit: function () { self.upd({ editing: a.id, draft: { min: a.min, days: a.days.slice() } }); },
+        isEditing: editing,
+        notEditing: !editing,
+        ed: editing ? mkEd(false) : null
+      };
+    });
+    var newEditing = s.editing === 'new' && !!s.draft;
+    return {
+      bedtimeOn: s.bedtime,
+      bedtimeOff: !s.bedtime,
+      anyWarning: (s.missed || s.unattended || showBedOff || showBattery),
+      pluggedIn: !s.battery,
+      batteryFill: s.battery ? 11 : 19,
+      batteryLabel: s.battery ? 'Batería 58 %, sin cargar' : 'Batería cargando',
+      showMissed: s.missed,
+      showUnattended: s.unattended,
+      showBedOff: showBedOff,
+      showBattery: showBattery,
+      dismissMissed: function () { self.upd({ missed: false }); },
+      dismissUnattended: function () { self.upd({ unattended: false }); },
+      activateBed: function () { self.upd({ bedtime: true }); },
+      bedIconStyle: 'width: 30px; height: 30px; border-radius: 15px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: ' + (s.bedtime ? '#5e5ce6' : 'rgba(255,255,255,0.12)'),
+      bedSub: s.bedtime ? 'Activo · lluvia sonando' : 'Apagado',
+      bedPressed: s.bedtime ? 'true' : 'false',
+      bedTrack: track(s.bedtime, '#5e5ce6'),
+      bedKnob: knob(s.bedtime),
+      toggleBed: function () { self.upd({ bedtime: !s.bedtime }); },
+      rain: s.rain,
+      rainLabel: s.rain + ' %',
+      onRain: function (e) { self.upd({ rain: parseInt(e.target.value, 10) }); },
+      rainRowStyle: 'display: flex; align-items: center; gap: 8px; opacity: ' + (s.bedtime ? '1' : '0.55'),
+      nextText: nextText,
+      nextIn: nextIn,
+      addNew: function () { self.upd({ editing: 'new', draft: { min: 420, days: [] } }); },
+      newEditing: newEditing,
+      newEd: newEditing ? mkEd(true) : { chips: [] },
+      alarms: alarms,
+      emptyList: alarms.length === 0 && !newEditing
+    };
+  }
+}
+</script>
+</body></html>

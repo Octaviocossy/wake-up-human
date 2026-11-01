@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<title>Alarma sonando</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style></style>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #000000; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, system-ui, sans-serif; color: #f5f5f7; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column">
+  <!-- Barra superior -->
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 32px 40px">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="height: 34px; padding: 0 14px 0 12px; border-radius: 17px; background: #ff9f0a; color: #1d1d1f; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7"></circle><path d="M12 9.5V13l2.5 1.5"></path><path d="M5 4 2.5 6.5M19 4l2.5 2.5"></path></svg>
+        <span>{{statusLabel}}</span>
+      </div>
+      <sc-if value="{{merged}}" hint-placeholder-val="{{ false }}">
+        <div style="height: 34px; padding: 0 14px; border-radius: 17px; background: #1c1c1e; border: 1px solid #3a3a3c; display: flex; align-items: center; gap: 8px; font-size: 14px; color: #f5f5f7">
+          <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          <span>Se sumó la alarma de las 07:05</span>
+        </div>
+      </sc-if>
+    </div>
+    <div style="font-size: 14px; color: #a1a1a6; font-variant-numeric: tabular-nums">{{elapsedLabel}}</div>
+  </div>
+  <!-- Sonando -->
+  <sc-if value="{{ringing}}" hint-placeholder-val="{{ true }}">
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 36px; padding: 0 40px">
+      <div style="font-size: 168px; font-weight: 200; letter-spacing: -6px; line-height: 0.9; font-variant-numeric: tabular-nums">{{clock}}</div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 22px">
+        <div style="font-size: 17px; color: #c7c7cc">Escribí estas seis palabras para apagarla</div>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; max-width: 1280px; font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; font-size: 40px; font-weight: 500" aria-hidden="true">
+          <sc-for list="{{words}}" as="w" hint-placeholder-count="6">
+            <div style="{{w.boxStyle}}"><sc-for list="{{w.chars}}" as="ch" hint-placeholder-count="5"><span style="{{ch.style}}">{{ch.c}}</span></sc-for></div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 14px">
+        <label for="unlock" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Texto para apagar la alarma: {{target}}</label>
+        <input id="unlock" type="text" value="{{typed}}" sc-camel-on-change="{{onType}}" sc-camel-on-paste="{{onPaste}}" sc-camel-on-drop="{{onPaste}}" sc-camel-auto-focus="{{ true }}" sc-camel-auto-complete="off" sc-camel-auto-correct="off" sc-camel-auto-capitalize="off" sc-camel-spell-check="false" placeholder="escribí acá…" style="width: 760px; height: 66px; box-sizing: border-box; padding: 0 24px; border-radius: 14px; background: #161618; border: 2px solid #ff9f0a; color: #f5f5f7; font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; font-size: 26px; outline: none; caret-color: #ff9f0a">
+        <div style="display: flex; align-items: center; gap: 14px" aria-live="polite">
+          <div style="display: flex; gap: 6px">
+            <sc-for list="{{segments}}" as="sg" hint-placeholder-count="6"><span style="{{sg.style}}"></span></sc-for>
+          </div>
+          <span style="font-size: 14px; color: #a1a1a6; font-variant-numeric: tabular-nums">{{progressLabel}}</span>
+        </div>
+      </div>
+    </div>
+    <!-- Barra inferior -->
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 40px 30px; border-top: 1px solid #1c1c1e; font-size: 13px; color: #a1a1a6">
+      <div style="display: flex; align-items: center; gap: 12px; flex: 1">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"></path><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"></path></svg>
+        <div style="width: 140px; height: 6px; border-radius: 3px; background: #2c2c2e; overflow: hidden"><div style="{{volFill}}"></div></div>
+        <span style="font-variant-numeric: tabular-nums">{{volLabel}}</span>
+      </div>
+      <div style="{{pasteStyle}}">
+        <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+        <span>{{pasteLabel}}</span>
+      </div>
+      <div style="flex: 1; display: flex; justify-content: flex-end">
+        <sc-if value="{{showCap}}" hint-placeholder-val="{{ true }}">
+          <span style="font-variant-numeric: tabular-nums">Se calla sola a las 08:00 · tope de 60 min</span>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+  <!-- Apagada -->
+  <sc-if value="{{solved}}" hint-placeholder-val="{{ false }}">
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 0 40px 80px">
+      <div style="width: 88px; height: 88px; border-radius: 44px; background: rgba(255,159,10,0.14); display: flex; align-items: center; justify-content: center">
+        <svg width="44" height="44" sc-camel-view-box="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17l9-10"></path></svg>
+      </div>
+      <div style="font-size: 40px; font-weight: 300; letter-spacing: -0.5px">Alarma apagada</div>
+      <div style="font-size: 17px; color: #c7c7cc">Volvieron el volumen y el silencio que tenías.</div>
+      <div style="font-size: 15px; color: #a1a1a6; font-variant-numeric: tabular-nums">{{solvedDetail}}</div>
+      <button sc-camel-on-click="{{restart}}" style="margin-top: 24px; height: 36px; padding: 0 18px; border: 1px solid #3a3a3c; border-radius: 18px; background: transparent; color: #c7c7cc; font: inherit; font-size: 13px; cursor: pointer">Volver a sonar (demo)</button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;momento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;inicio&quot;,&quot;sumada&quot;,&quot;apagada&quot;],&quot;default&quot;:&quot;inicio&quot;},&quot;mostrarTope&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+var POOL = ['mesa','camino','verde','pan','ventana','rio','nube','perro','libro','agua','casa','calle','fuego','silla','tierra','luna','mano','puerta','papel','campo','noche','leche','barco','cielo','piedra','flor','gato','plato','sol','tren','hoja','vaso','reloj','mar','lapiz','cama','ropa','sal','miel','viento'];
+var WORDS0 = ['mesa','camino','verde','pan','ventana','rio'];
+var PREV_VOL = 35;
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function pick6() {
+  var p = POOL.slice(), out = [];
+  for (var i = 0; i < 6; i++) { out.push(p.splice(Math.floor(Math.random() * p.length), 1)[0]); }
+  return out;
+}
+var S_DONE = 'color: #f5f5f7';
+var S_PEND = 'color: #8e8e93';
+var S_WRONG = 'color: #ff6961; background: rgba(255,69,58,0.2); border-radius: 4px';
+var S_CURSOR = 'color: #8e8e93; box-shadow: inset 0 -3px 0 #ff9f0a';
+class Component extends DCLogic {
+  initial(m) {
+    var target = WORDS0.join(' ');
+    return {
+      m: m,
+      words: WORDS0,
+      typed: m === 'inicio' ? 'mesa camino vere' : (m === 'sumada' ? 'mesa camino verde pan v' : target),
+      elapsed: m === 'inicio' ? 14 : 320,
+      merged: m !== 'inicio',
+      solved: m === 'apagada',
+      solvedAt: 352,
+      pasteFlash: false
+    };
+  }
+  cur() {
+    var m = this.props.momento ?? 'inicio';
+    var s = this.state;
+    return (s && s.m === m) ? s : this.initial(m);
+  }
+  upd(p) { this.setState(Object.assign({}, this.cur(), p)); }
+  componentDidMount() {
+    var self = this;
+    this.timer = setInterval(function () {
+      var s = self.cur();
+      if (!s.solved && s.elapsed < 3600) self.upd({ elapsed: s.elapsed + 1 });
+    }, 1000);
+  }
+  componentWillUnmount() {
+    clearInterval(this.timer);
+    clearTimeout(this.flashT);
+  }
+  renderVals() {
+    var self = this;
+    var s = this.cur();
+    var target = s.words.join(' ');
+    var t = s.typed;
+    var offset = 0, doneCount = 0;
+    var words = s.words.map(function (w, wi) {
+      var err = false, allOk = true;
+      var chars = w.split('').map(function (c, j) {
+        var pos = offset + j, st;
+        if (pos < t.length) {
+          if (t.charAt(pos) === c) st = S_DONE; else { st = S_WRONG; err = true; allOk = false; }
+        } else {
+          allOk = false;
+          st = (pos === t.length) ? S_CURSOR : S_PEND;
+        }
+        return { c: c, style: st };
+      });
+      var spacePos = offset + w.length;
+      var isLast = wi === s.words.length - 1;
+      if (!isLast && spacePos < t.length && t.charAt(spacePos) !== ' ') err = true;
+      if (isLast && t.length > target.length && t.slice(target.length).trim() !== '') err = true;
+      var done = allOk && !err && (isLast || spacePos < t.length);
+      if (done) doneCount++;
+      offset = spacePos + 1;
+      return {
+        chars: chars,
+        boxStyle: 'padding: 12px 18px; border-radius: 12px; line-height: 1; white-space: pre; background: ' +
+          (done ? 'rgba(255,159,10,0.10)' : '#0f0f10') + '; border: 1.5px solid ' +
+          (err ? '#ff453a' : (done ? 'rgba(255,159,10,0.6)' : '#2c2c2e'))
+      };
+    });
+    var segments = s.words.map(function (w, i) {
+      return { style: 'display: block; width: 34px; height: 6px; border-radius: 3px; background: ' + (i < doneCount ? '#ff9f0a' : '#2c2c2e') };
+    });
+    var total = 7 * 3600 + s.elapsed;
+    var clock = pad(Math.floor(total / 3600)) + ':' + pad(Math.floor((total % 3600) / 60));
+    var mm = Math.floor(s.elapsed / 60), ss = s.elapsed % 60;
+    var vol = s.elapsed >= 30 ? 100 : Math.round(PREV_VOL + (100 - PREV_VOL) * s.elapsed / 30);
+    var volLabel = s.elapsed >= 30 ? 'Volumen del sistema al máximo' : ('Volumen del sistema ' + vol + ' % · al máximo en ' + (30 - s.elapsed) + ' s');
+    var sa = s.solvedAt, smm = Math.floor(sa / 60), sss = sa % 60;
+    return {
+      statusLabel: s.merged ? 'Sonando · 07:00 y 07:05' : 'Sonando · alarma de las 07:00',
+      merged: s.merged,
+      elapsedLabel: s.solved ? '' : ('Sonando hace ' + mm + ':' + pad(ss)),
+      ringing: !s.solved,
+      solved: s.solved,
+      clock: clock,
+      words: words,
+      target: target,
+      typed: t,
+      onType: function (e) {
+        var v = e.target.value.toLowerCase();
+        if (v === target || v === target + ' ') self.upd({ typed: v, solved: true, solvedAt: s.elapsed });
+        else self.upd({ typed: v });
+      },
+      onPaste: function (e) {
+        e.preventDefault();
+        self.upd({ pasteFlash: true });
+        clearTimeout(self.flashT);
+        self.flashT = setTimeout(function () { self.upd({ pasteFlash: false }); }, 1800);
+      },
+      segments: segments,
+      progressLabel: doneCount + ' de 6 palabras',
+      volFill: 'height: 100%; border-radius: 3px; background: #ff9f0a; transition: width .9s linear; width: ' + vol + '%',
+      volLabel: volLabel,
+      pasteLabel: s.pasteFlash ? 'No se puede pegar: tipealo' : 'Pegar está bloqueado',
+      pasteStyle: 'display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; transition: all .2s; ' +
+        (s.pasteFlash ? 'background: rgba(255,214,10,0.14); color: #ffd60a' : 'background: transparent; color: #a1a1a6'),
+      showCap: this.props.mostrarTope ?? true,
+      solvedDetail: 'Sonó ' + smm + ' min ' + sss + ' s',
+      restart: function () {
+        self.upd({ words: pick6(), typed: '', elapsed: 0, merged: false, solved: false, pasteFlash: false });
+      }
+    };
+  }
+}
+</script>
+</body></html>

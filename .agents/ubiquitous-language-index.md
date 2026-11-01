@@ -10,15 +10,12 @@
 | Term | Area |
 |------|------|
 | Alarm | Alarms |
-| Fallback | Wake-up mission |
-| Follow-up | Alarms |
-| Mission | Wake-up mission |
-| Photo check | Wake-up mission |
-| Reference | Wake-up mission |
+| Armed | Alarms |
+| Bedtime | Bedtime |
+| Dismiss | Alarms |
+| Occurrence | Alarms |
 | Ring | Alarms |
-| System alarm | Alarms |
-| Target object | Wake-up mission |
-| Wake-up session | Alarms |
+| Typing challenge | Alarms |
 
 ## `.agents/ubiquitous-language-scaffold.md`
 

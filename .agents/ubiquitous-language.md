@@ -3,8 +3,8 @@
 > Single source of truth for current domain and technical terminology.
 > Read this before changing canonical types, states, processes, or data contracts.
 >
-> **Last updated:** 2026-10-31
-> **Canonical code:** `PhotoAlarm/Alarm/`, `PhotoAlarm/Mission/`, `PhotoAlarm/Vision/`, `PhotoAlarm/Persistence/`
+> **Last updated:** 2026-11-01
+> **Canonical code:** none yet — set when the macOS app's domain folders exist
 > **Budget:** notes 600 · warn 81920 · fail 102400 (bytes)
 
 This file holds **this project's own domain vocabulary** and is **owned by the project** — the
@@ -37,32 +37,30 @@ read on demand.
 
 ### Alarms
 
-What rings, and how rings group into one morning's wake-up.
+What rings, when, and how a ringing alarm is silenced.
 
 | Term | Canonical type | Aliases to avoid | Notes |
 |------|----------------|------------------|-------|
-| Alarm | `WakeAlarm` (SwiftData model) | *base alarm*, *recurring alarm* | A wake-up time plus at least one weekday, configured by the user. Its AlarmKit registration is a System alarm, never an Alarm; the type is not named `Alarm` so it cannot shadow `AlarmKit.Alarm`. |
-| System alarm | `AlarmKit.Alarm` | *alarm* (unqualified) | Any alarm registered with AlarmKit: an Alarm's weekly registration or a Follow-up. Cancelling a System alarm never edits an Alarm. |
-| Ring | one alerting presentation | *alert*, *fire* | One time a System alarm sounds, drawn by the system with the Stop and "Take photo" buttons. A Ring is not a Wake-up session: only an Alarm occurrence's first Ring opens one. |
-| Follow-up | one-off System alarm | *snooze*, *re-alarm* | A Ring the re-alarm loop schedules shortly after a Ring of an open Wake-up session ends through Stop or "Take photo", capped per session. Only a completed Mission cancels it. It belongs to the session of the Ring it follows and never opens a new one. There is no snooze. |
-| Wake-up session | `WakeUpSession` (persisted by `MissionStateStore`) | *session* (unqualified) | One occurrence of an Alarm, from its first Ring until its Mission is completed, or until its Follow-up window closes and it is abandoned. One per occurrence, never one per Ring; a dead loop does not end it early. |
+| Alarm | user-configured alarm | *timer*, *reminder* | A wake-up time plus the weekdays it repeats on. With no weekday it rings once, at the next Occurrence of its time, then Disarms itself. The user may configure several, each Armed or Disarmed on its own. |
+| Armed | Alarm state (opposite: Disarmed) | *enabled*, *active*, *on* | An Armed Alarm rings at its next Occurrence, provided the Mac is awake then. Disarming is switching an Alarm off before it rings, from the panel, and never asks for the Typing challenge. |
+| Occurrence | one due date-and-time of an Armed Alarm | *instance*, *trigger* | One moment an Armed Alarm is due. An Occurrence that passes while the Mac is in System sleep or the app is not running is missed: it never rings late. |
+| Ring | one sounding of an Alarm | *alert*, *fire* | One time an Alarm sounds, with the Typing challenge covering the main display above every other window. It ends only when Dismissed or when its unattended cap runs out; there is no snooze. An Occurrence due during a Ring joins it instead of starting a second one. |
+| Dismiss | ending a Ring | *stop*, *turn off*, *deactivate* | Ending the current Ring by completing its Typing challenge. Dismiss acts on a Ring already sounding; Disarm acts on an Alarm before it rings. |
+| Typing challenge | shown text + typed input | *mission*, *puzzle*, *captcha* | The text shown during a Ring that must be retyped, letter for letter in any case, to Dismiss it. Drawn fresh for every Ring; pasting or dropping text never fills it. |
 
-### Wake-up mission
+### Bedtime
 
-What must be done to end a Wake-up session.
+What plays while the user falls asleep.
 
 | Term | Canonical type | Aliases to avoid | Notes |
 |------|----------------|------------------|-------|
-| Mission | completion of a Wake-up session | *challenge* | What completes a Wake-up session: a Photo check returning Match, or a completed Fallback. Nothing else completes it; Stop only ends the current Ring. |
-| Target object | registered physical object | *item*, *object* (unqualified) | The one physical object whose photo completes the Mission. Exactly one, global to every Alarm; re-registering it replaces all its References. |
-| Reference | archived Vision feature print (`Data`) | *sample*, *template* | The stored feature print of one setup photo of the Target object, taken from the live camera. The Target object has 3 to 5. |
-| Photo check | live photo vs. every Reference | *scan*, *verification* | Comparing one live camera photo against every Reference: **Match** when the smallest distance is under the calibrated threshold, otherwise **No match**. A No match is a failed attempt toward the Fallback. |
-| Fallback | emergency challenge | *emergency mode*, *backup* | The challenge that completes the Mission without a Match, for a lost or moved Target object. It unlocks only after repeated failed Photo checks in the same Wake-up session. |
+| Bedtime | rain playback + keep-awake mode | *sleep mode*, *rain mode*, *sleep* (unqualified) | The mode that plays generated rain and keeps the Mac out of System sleep until it is switched off or a Ring replaces it. The only thing that keeps the Mac awake, so an Alarm Armed without Bedtime may not ring. Never System sleep itself. |
 
 ---
 
 ## Flagged ambiguities
 
-- **"alarm"** — AlarmKit calls every registration an `Alarm`; this domain does not. Say **Alarm**
-  for the user's configured time and weekdays, **System alarm** for an AlarmKit registration, and
-  **Ring** for one sounding.
+- **"sleep"** — macOS uses it for the system's idle or lid-closed rest, which stops every Alarm
+  from ringing. Say **System sleep** for that, and **Bedtime** for the rain mode.
+- **"turn off"** — say **Disarm** for an Alarm that is not ringing yet, and **Dismiss** for a
+  Ring that is sounding now.
