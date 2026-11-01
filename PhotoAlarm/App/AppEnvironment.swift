@@ -7,4 +7,6 @@ enum AppEnvironment {
     static let matcher: any ObjectMatcher = VisionObjectMatcher()
     static let loop = WakeUpLoop(
         store: MissionStateStore(directory: .applicationSupportDirectory), scheduler: scheduler)
+    /// The one reconcile of Alarms with AlarmKit; every caller shares it so passes never interleave.
+    static let alarmSync = AlarmSync(scheduler: scheduler, loop: loop)
 }

@@ -4,7 +4,6 @@ import SwiftUI
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
-    @Query private var objects: [TargetObject]
     @State private var missionOpen = false
 
     var body: some View {
@@ -22,6 +21,7 @@ struct RootView: View {
         .task(id: scenePhase) {
             guard scenePhase == .active else { return }
             await refreshMissionOpen()
+            await reconcileAlarms()
         }
         // The intent that launched the app may finish after the first refresh above.
         .onReceive(NotificationCenter.default.publisher(for: .wakeUpSessionsChanged)) { _ in
@@ -30,27 +30,17 @@ struct RootView: View {
     }
 
     private var normalContent: some View {
-        NavigationStack {
-            List {
-                Section { Text("Photo Alarm") }
-                Section("Target object") {
-                    if let object = objects.first {
-                        Text("Registered · \(object.references.count) references")
-                    } else {
-                        Text("Not registered")
-                    }
-                    NavigationLink("Set up target object") {
-                        ObjectSetupView(
-                            matcher: AppEnvironment.matcher,
-                            repository: TargetObjectRepository(context: modelContext)
-                        )
-                    }
-                }
-                #if DEBUG
-                    Section { NavigationLink("Debug") { DebugMenuView() } }
-                #endif
-            }
-            .navigationTitle("Photo Alarm")
+        NavigationStack { AlarmListView(context: modelContext) }
+    }
+
+    /// Re-registers every enabled Alarm on launch and whenever the app becomes active: alarms can stop ringing
+    /// after an iOS update, and this is also what removes System alarms nothing owns. In every state, mission
+    /// lockdown included.
+    private func reconcileAlarms() async {
+        do {
+            _ = try await AppEnvironment.alarmSync.reconcile(in: modelContext)
+        } catch {
+            Log.alarm.error("could not read the alarms to reconcile: \(error.localizedDescription, privacy: .public)")
         }
     }
 
