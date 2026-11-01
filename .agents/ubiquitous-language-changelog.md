@@ -5,7 +5,7 @@
 > and the invariants in `.agents/ubiquitous-language-invariants.md` and
 > `.agents/ubiquitous-language-invariants-scaffold.md` are what govern current code.
 >
-> **Last updated:** 2026-10-16
+> **Last updated:** 2026-10-31
 
 ---
 
@@ -45,3 +45,6 @@
 | 2026-10-16 | Added S22: in local mode nothing leaves the machine | Spec decision 22: the rule had to be absolute to be reviewable — `/handoff with-github` and `sync-labels.sh` sit outside the issue and epic workflow, and exempting either would have left the mode a promise made command by command. As an invariant it reaches the Standards axis through the corpus pack, and a breach is a hard violation. Spec `.agents/specs/2026-10-15-local-mode.md`; ADR-0023 |
 | 2026-10-16 | Reworded the Review gate row: under an epic it sits between a child's commit (pushed in GitHub mode, local in local mode) and its merge | Local mode (ADR-0023): a child is committed but not pushed there, so "between a child's push and its merge" described only GitHub mode. Same term, same meaning; the row is backend-neutral now |
 | 2026-10-17 | Sharpened *Artifact* (Scaffold area): product content — the text a product shows its users — is not an artifact; its language is the product's decision. S20 unchanged | /grill in Nexa over the PR #68 review: read literally, *Artifact* covered "code" and so put a product's user-facing strings in English, which a project-owned `AGENTS.md` line cannot exempt from S20. ADR-0024 |
+| 2026-10-31 | Added the product's first vocabulary: the Alarms area (Alarm, System alarm, Ring, Follow-up, Wake-up session) and the Wake-up mission area (Mission, Target object, Reference, Photo check, Fallback), plus the flagged ambiguity "alarm" | `/grill` on `docs/product-brief.md` (Photo Alarm): the brief used "alarm" for the user's configured time, for every AlarmKit registration and for one sounding, and "mission" and "session" interchangeably. The Swift type is `WakeAlarm` so it cannot shadow `AlarmKit.Alarm` |
+| 2026-10-31 | Added product invariants 1–3: camera only, never the photo library; mission state persisted, never held only in memory; no network calls | Same `/grill` session: the brief stated these as working notes; the user promoted them to invariants so a breach is a hard violation at the review gate. "No third-party dependencies" was deliberately not promoted |
+| 2026-10-31 | Sharpened Follow-up (armed by Stop or "Take photo", cancelled only by a completed Mission) and Wake-up session (abandoned when its Follow-up window closes, not when the loop dies) | Same `/grill` session, round 2: "Take photo" then leaving the app would otherwise have been an escape button, contradicting the brief's "the loop keeps running"; and a session whose loop died to a side-button press needed an end that does not lock the app all day |

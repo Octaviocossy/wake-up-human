@@ -7,11 +7,18 @@
 > do not copy them here. Number product invariants plainly — `**1. …**`, `**2. …**` — and append,
 > never renumber, so a citation stays stable and never collides with an `S` identifier.
 >
-> **Last updated:** 2026-09-13
+> **Last updated:** 2026-10-31
 > **Budget:** notes 600 · warn 24576 · fail 32768 (bytes)
 
 ---
 
 ## Invariants and relationships
 
-_No product invariants yet._
+- **1. The app never reads the photo library.** Every Reference and every Photo check comes from a
+  live camera capture. A stored photo of the Target object would complete the Mission without
+  getting out of bed.
+- **2. Mission state is persisted, never held only in memory.** App code runs only in short bursts —
+  scheduling, an alarm-button intent, an opened mission — so a Wake-up session's state must survive
+  the process that wrote it.
+- **3. The app makes no network calls.** No backend, accounts, analytics or sync: Alarms,
+  References and Photo checks never leave the device.
