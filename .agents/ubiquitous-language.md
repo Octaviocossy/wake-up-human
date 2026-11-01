@@ -56,6 +56,14 @@ What plays while the user falls asleep.
 |------|----------------|------------------|-------|
 | Bedtime | rain playback + keep-awake mode | *sleep mode*, *rain mode*, *sleep* (unqualified) | The mode that plays generated rain and keeps the Mac out of System sleep until it is switched off or a Ring replaces it. The only thing that keeps the Mac awake, so an Alarm Armed without Bedtime may not ring. Never System sleep itself. |
 
+### Panel
+
+What the menu-bar panel tells the user.
+
+| Term | Canonical type | Aliases to avoid | Notes |
+|------|----------------|------------------|-------|
+| Notice | panel notice | *notification*, *alert*, *warning* | A message at the top of the panel about a missed Occurrence, an unattended Ring, Bedtime off with an Armed Alarm due within 12 hours, or Bedtime on battery; never a system notification. |
+
 ---
 
 ## Flagged ambiguities

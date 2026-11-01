@@ -67,7 +67,8 @@ enum RingFormatting {
     }
 
     /// "07:00" → "07:00"; "07:00", "07:05" → "07:00 y 07:05"; three or more → "07:00, 07:05 y 07:10".
-    private static func list(_ times: [String]) -> String {
+    /// Shared with the panel's notices (`NoticeFormatting`).
+    static func list(_ times: [String]) -> String {
         guard let last = times.last else { return "" }
         guard times.count > 1 else { return last }
         return times.dropLast().joined(separator: ", ") + " y " + last
