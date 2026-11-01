@@ -23,10 +23,14 @@ struct AlarmListView: View {
     }
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Query(sort: [SortDescriptor(\WakeAlarm.hour), SortDescriptor(\WakeAlarm.minute)]) private var alarms: [WakeAlarm]
     @Query private var objects: [TargetObject]
     @State private var model: AlarmListModel
     @State private var editing: Editing?
+    /// When this build's provisioning profile expires, and when that was last read. nil expiry: no banner.
+    @State private var buildExpiry: Date?
+    @State private var buildExpiryCheckedAt: Date = .now
 
     init(context: ModelContext) {
         _model = State(initialValue: AlarmListModel(context: context))
@@ -34,6 +38,7 @@ struct AlarmListView: View {
 
     var body: some View {
         List {
+            ExpiryBanner(expiry: buildExpiry, now: buildExpiryCheckedAt)
             noticeSection
             alarmsSection
             targetObjectSection
@@ -50,6 +55,16 @@ struct AlarmListView: View {
         .sheet(item: $editing) { editing in
             AlarmEditorView(model: model, alarm: editing.alarm)
         }
+        .onAppear(perform: refreshBuildExpiry)
+        // The list stays on screen while the app is backgrounded, so days pass without it reappearing.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { refreshBuildExpiry() }
+        }
+    }
+
+    private func refreshBuildExpiry() {
+        buildExpiry = ProvisioningProfile.embeddedExpirationDate()
+        buildExpiryCheckedAt = .now
     }
 
     // MARK: Sections
