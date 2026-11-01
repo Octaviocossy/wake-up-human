@@ -19,8 +19,7 @@ targets:
     entitlements:
       path: WakeUpHuman/WakeUpHuman.entitlements
       properties:
-        # App Sandbox on (spec decision 2). Spec decision 31: if the Sandbox blocks setting the
-        # system volume, it is dropped — slice #13 decides with a probe.
+        # Spike #13 (2026-11-01): a sandboxed build can set the system volume, so the App Sandbox stays (spec decision 31).
         com.apple.security.app-sandbox: true
     settings:
       base:
