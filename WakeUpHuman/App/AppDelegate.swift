@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
     private var alarmStore: AlarmStore?
     private var occurrenceScheduler: OccurrenceScheduler?
+    private var ringController: RingController?
     private var systemEvents: SystemEventObserver?
 
     @MainActor
@@ -17,9 +18,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let alarmStore = AlarmStore()
         let scheduler = OccurrenceScheduler(store: alarmStore, deadlines: DispatchDeadlineScheduler())
-        // Here both only log: the Ring subscribes to `onDue` (#15), the missed notice to `onMissed` (#17).
-        scheduler.onDue = { occurrences in Log.alarms.info("Due: \(occurrences.count) Occurrence(s)") }
+        // Built before the scheduler starts: a launch inside the on-time tolerance can ring at once.
+        let ringController = makeRingController(alarmStore: alarmStore)
+        scheduler.onDue = { [weak ringController] occurrences in ringController?.ring(occurrences, now: Date()) }
+        // Here it only logs: the missed notice subscribes to `onMissed` (#17).
         scheduler.onMissed = { missed in Log.alarms.notice("Missed: \(missed.count) Occurrence(s)") }
+        self.ringController = ringController
         alarmStore.onChange = { [weak scheduler] in scheduler?.alarmsDidChange(now: Date()) }
         self.alarmStore = alarmStore
         occurrenceScheduler = scheduler
@@ -45,6 +49,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     func applicationWillTerminate(_ notification: Notification) {
+        // A Ring cut short by quitting still gives the volume back and releases its power calls.
+        ringController?.applicationWillTerminate()
         systemEvents?.stop()
+    }
+
+    /// The Ring stack: the tone, the borrowed volume, the display's power calls, the window and the
+    /// unattended cap.
+    @MainActor
+    private func makeRingController(alarmStore: AlarmStore) -> RingController {
+        let ringVolume = RingVolumeController(volume: CoreAudioSystemVolume())
+        // A Ring cut short by Force Quit or a crash gives the volume back now.
+        ringVolume.restorePendingIfNeeded()
+        let wordList: WordList
+        do {
+            wordList = try WordList.bundled()
+        } catch {
+            Log.ring.fault("Bundled word list failed to load: \(String(describing: error)); using the fallback")
+            wordList = .fallback
+        }
+        return RingController(
+            alarmStore: alarmStore,
+            tone: AlarmTone(),
+            volume: ringVolume,
+            displayAssertion: IOKitPowerAssertion(kind: .preventDisplaySleep, name: "Wake Up Human — Ring"),
+            displayWaker: IOKitDisplayWaker(),
+            window: RingWindowController(),
+            capDeadline: DispatchDeadlineScheduler(),
+            makeChallenge: { TypingChallenge.draw(from: wordList) }
+        )
     }
 }

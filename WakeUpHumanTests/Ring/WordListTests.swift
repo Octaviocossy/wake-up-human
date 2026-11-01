@@ -24,6 +24,19 @@ struct WordListTests {
         #expect(Set(list.words).count == list.words.count)
     }
 
+    @Test func fallbackPassesTheSameChecksAsTheBundledList() throws {
+        let parsed = try WordList(text: WordList.fallback.words.joined(separator: "\n"))
+
+        #expect(parsed.words == WordList.fallback.words)
+        #expect(WordList.fallback.words.count == 30)
+    }
+
+    @Test func fallbackWordsComeFromTheBundledList() throws {
+        let bundled = Set(try WordList.bundled().words)
+
+        #expect(WordList.fallback.words.allSatisfy(bundled.contains))
+    }
+
     @Test func parsesOneWordPerLineAndIgnoresBlankLines() throws {
         let list = try WordList(text: "mesa\n\ncamino\n  \nverde\r\npan\nventana\nnube")
 

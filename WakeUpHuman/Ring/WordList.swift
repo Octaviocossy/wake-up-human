@@ -28,12 +28,25 @@ struct WordList: Sendable {
         words = parsed
     }
 
+    /// Thirty words from the bundled list, used only if the bundled file cannot load: an alarm app
+    /// must never be unable to show a Typing challenge.
+    static let fallback = WordList(validatedWords: [
+        "mesa", "camino", "verde", "pan", "ventana", "nube", "perro", "libro", "agua", "casa",
+        "calle", "fuego", "silla", "tierra", "luna", "mano", "puerta", "papel", "campo", "noche",
+        "leche", "barco", "cielo", "piedra", "flor", "gato", "plato", "sol", "tren", "hoja",
+    ])
+
     static func bundled(in bundle: Bundle = .main) throws(LoadError) -> WordList {
         guard
             let url = bundle.url(forResource: "words-es", withExtension: "txt"),
             let text = try? String(contentsOf: url, encoding: .utf8)
         else { throw .missingResource }
         return try WordList(text: text)
+    }
+
+    /// For a literal list whose validity a test checks against `init(text:)`.
+    private init(validatedWords: [String]) {
+        words = validatedWords
     }
 
     private static func isValid(_ word: String) -> Bool {
