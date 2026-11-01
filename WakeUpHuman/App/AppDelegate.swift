@@ -10,6 +10,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var occurrenceScheduler: OccurrenceScheduler?
     private var ringController: RingController?
     private var bedtimeController: BedtimeController?
+    private var noticeCenter: NoticeCenter?
+    private var powerSource: IOKitPowerSourceMonitor?
+    private var loginItem: SMAppServiceLoginItem?
     private var systemEvents: SystemEventObserver?
 
     @MainActor
@@ -18,6 +21,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !AppEnvironment.isRunningTests else { return }
 
         let alarmStore = AlarmStore()
+        // Built before the scheduler starts: its launch evaluation can report missed Occurrences at once.
+        let notices = NoticeCenter()
+        noticeCenter = notices
+        let powerSource = IOKitPowerSourceMonitor()
+        self.powerSource = powerSource
+        let loginItem = SMAppServiceLoginItem()
+        self.loginItem = loginItem
+        LaunchAtLoginDefault.applyIfNeeded(loginItem: loginItem)
         let scheduler = OccurrenceScheduler(store: alarmStore, deadlines: DispatchDeadlineScheduler())
         // Built before the scheduler starts: a launch inside the on-time tolerance can ring at once.
         let ringController = makeRingController(alarmStore: alarmStore)
@@ -28,10 +39,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             assertion: IOKitPowerAssertion(kind: .preventSystemSleep, name: "Wake Up Human — Bedtime")
         )
         ringController.onRingStarted = { [weak bedtime] in bedtime?.endForRing() }
+        // A Ring nobody Dismissed leaves a notice behind (spec decision 14).
+        ringController.onRingEnded = { [notices, alarmStore] outcome in
+            guard case .unattended(let occurrences, _, let endedAt) = outcome else { return }
+            notices.recordUnattended(
+                occurrences: occurrences, endedAt: endedAt,
+                timeLabel: { timeLabel(of: $0, alarms: alarmStore.alarms, calendar: .current) }, now: Date())
+        }
         bedtimeController = bedtime
         scheduler.onDue = { [weak ringController] occurrences in ringController?.ring(occurrences, now: Date()) }
-        // Here it only logs: the missed notice subscribes to `onMissed` (#17).
-        scheduler.onMissed = { missed in Log.alarms.notice("Missed: \(missed.count) Occurrence(s)") }
+        // An Occurrence missed while the Mac slept or the app was closed never rings late (invariant 5);
+        // the panel says so instead.
+        scheduler.onMissed = { [notices, alarmStore] missed in
+            Log.alarms.notice("Missed: \(missed.count) Occurrence(s)")
+            notices.recordMissed(
+                missed, timeLabel: { timeLabel(of: $0, alarms: alarmStore.alarms, calendar: .current) }, now: Date())
+        }
         self.ringController = ringController
         alarmStore.onChange = { [weak scheduler] in scheduler?.alarmsDidChange(now: Date()) }
         self.alarmStore = alarmStore
@@ -48,11 +71,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let panelClock = PanelClock()
         let panelController = PanelController(
             clock: panelClock,
-            rootView: PanelView(clock: panelClock, alarmStore: alarmStore, bedtime: bedtime)
+            rootView: PanelView(
+                clock: panelClock, alarmStore: alarmStore, bedtime: bedtime, notices: notices,
+                powerSource: powerSource, ringController: ringController, loginItem: loginItem)
         )
         self.panelClock = panelClock
         self.panelController = panelController
-        statusItemController = StatusItemController(panelController: panelController)
+        statusItemController = StatusItemController(panelController: panelController) {
+            [alarmStore, ringController, bedtime, notices, powerSource] in
+            Self.statusIconInput(
+                alarmStore: alarmStore, ringController: ringController, bedtime: bedtime, notices: notices,
+                powerSource: powerSource, now: Date())
+        }
         Log.app.info("Wake Up Human launched")
     }
 
@@ -63,6 +93,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Termination never leaves the keep-awake assertion held or the rain playing.
         bedtimeController?.turnOff()
         systemEvents?.stop()
+        powerSource?.stop()
+    }
+
+    /// What the status icon shows: a Ring, Bedtime, an Armed Alarm, and whether any notice — pending
+    /// or derived — waits. Every `@Observable` property read here redraws the icon when it changes.
+    @MainActor
+    private static func statusIconInput(
+        alarmStore: AlarmStore, ringController: RingController, bedtime: BedtimeController,
+        notices: NoticeCenter, powerSource: IOKitPowerSourceMonitor, now: Date
+    ) -> StatusIconInput {
+        let derived = NoticeCenter.derived(
+            bedtimeOn: bedtime.isOn,
+            upcoming: UpcomingOccurrence.next(in: alarmStore.alarms, after: now, calendar: OccurrenceCalendar()),
+            onBattery: powerSource.isOnBattery,
+            now: now
+        )
+        return StatusIconInput(
+            isRinging: ringController.isRinging,
+            bedtimeOn: bedtime.isOn,
+            anyAlarmArmed: alarmStore.alarms.contains(where: \.isArmed),
+            hasPendingNotice: !notices.pending.isEmpty || !derived.isEmpty
+        )
     }
 
     /// The Ring stack: the tone, the borrowed volume, the display's power calls, the window and the

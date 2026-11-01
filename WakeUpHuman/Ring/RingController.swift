@@ -15,8 +15,8 @@ final class RingController {
     private(set) var session: RingSession?
     var isRinging: Bool { session != nil }
 
-    /// Hooks for later slices: Bedtime ends when a Ring starts (#16); the status icon is redrawn and
-    /// an unattended Ring is recorded when one ends (#17).
+    /// Hooks for other slices: Bedtime ends when a Ring starts (#16); an unattended Ring is recorded
+    /// as a notice when one ends (#17). The status icon follows `isRinging` through observation.
     @ObservationIgnored var onRingStarted: (@MainActor () -> Void)?
     @ObservationIgnored var onRingEnded: (@MainActor (RingOutcome) -> Void)?
 
@@ -170,16 +170,9 @@ final class RingController {
         capDeadline.cancel()
     }
 
-    /// The time of each Occurrence the Ring covers, in date order: its Alarm's time, or — if the
-    /// Alarm was deleted meanwhile — the Occurrence's own time of day.
+    /// The time of each Occurrence the Ring covers, in date order.
     private func alarmTimes(of session: RingSession) -> [String] {
-        session.occurrences.map { occurrence in
-            if let alarm = alarmStore.alarms.first(where: { $0.id == occurrence.alarmID }) {
-                return AlarmFormatting.time(alarm.time)
-            }
-            let components = calendar.dateComponents([.hour, .minute], from: occurrence.date)
-            return AlarmFormatting.time(TimeOfDay(hour: components.hour ?? 0, minute: components.minute ?? 0))
-        }
+        session.occurrences.map { timeLabel(of: $0, alarms: alarmStore.alarms, calendar: calendar) }
     }
 
     private static func volumeStatus(_ state: RingVolumeController.State) -> VolumeStatus {
