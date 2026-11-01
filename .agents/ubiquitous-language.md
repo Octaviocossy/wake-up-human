@@ -4,7 +4,7 @@
 > Read this before changing canonical types, states, processes, or data contracts.
 >
 > **Last updated:** 2026-11-01
-> **Canonical code:** none yet — set when the macOS app's domain folders exist
+> **Canonical code:** `WakeUpHuman/Alarms/`, `WakeUpHuman/Ring/`, `WakeUpHuman/Bedtime/`, `WakeUpHuman/Notices/`, `WakeUpHuman/Power/`
 > **Budget:** notes 600 · warn 81920 · fail 102400 (bytes)
 
 This file holds **this project's own domain vocabulary** and is **owned by the project** — the

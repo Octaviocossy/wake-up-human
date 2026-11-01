@@ -1,6 +1,7 @@
 # Plan: Epic — Photo Alarm MVP
 
-> Status: **draft**
+> Status: **abandoned**
+> Superseded by: `.agents/specs/2026-11-01-macos-typing-alarm.md` — the iOS app shipped by this epic was retired by the macOS pivot
 > Created: 2026-10-31
 > Issue: #1
 > Integration branch: epic/1-photo-alarm-mvp
