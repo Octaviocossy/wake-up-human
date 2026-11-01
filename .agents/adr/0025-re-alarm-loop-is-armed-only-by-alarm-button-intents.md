@@ -1,3 +1,7 @@
+---
+Status: deprecated — the iOS app was retired by the macOS pivot (`.agents/specs/2026-11-01-macos-typing-alarm.md`)
+---
+
 # The re-alarm loop is armed only by alarm-button intents
 
 AlarmKit's Stop button cannot be blocked, so Photo Alarm makes a stopped Ring come back by

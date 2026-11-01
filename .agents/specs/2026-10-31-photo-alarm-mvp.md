@@ -1,6 +1,7 @@
 # Spec: Photo Alarm MVP
 
-> Status: **settled**
+> Status: **superseded**
+> Superseded by: `.agents/specs/2026-11-01-macos-typing-alarm.md` (the iOS app was retired on 2026-11-01)
 > Created: 2026-10-31
 > Grilled: 2026-10-31 — 4 rounds, 23 decisions
 > Suggested next: /spec-breakdown

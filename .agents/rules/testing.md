@@ -23,9 +23,9 @@ Write tests for what you touch, prioritized by how cheaply they catch regression
 
 ## File placement & naming
 
-Tests live in `PhotoAlarmTests/`, mirroring `PhotoAlarm/`
-(`PhotoAlarm/Mission/WakeUpLoop.swift` → `PhotoAlarmTests/Mission/WakeUpLoopTests.swift`). One
-`struct <Type>Tests` per type; test fakes live in `PhotoAlarmTests/Fakes/`.
+Tests live in `WakeUpHumanTests/`, mirroring `WakeUpHuman/`
+(`WakeUpHuman/Alarms/OccurrenceCalendar.swift` → `WakeUpHumanTests/Alarms/OccurrenceCalendarTests.swift`).
+One `struct <Type>Tests` per type; test fakes live in `WakeUpHumanTests/Fakes/`.
 
 Whatever convention is chosen, keep a test next to (or clearly traceable to) the module it
 covers, so a test for domain code is treated as domain code by
@@ -33,10 +33,12 @@ covers, so a test for domain code is treated as domain code by
 
 ## Harness
 
-Swift Testing (`@Test`, `#expect`, `#require`). AlarmKit, the camera and Vision sit behind the
-`AlarmScheduler` and `ObjectMatcher` protocols and are replaced by fakes; SwiftData tests use
-`ModelConfiguration(isStoredInMemoryOnly: true)`; file-based stores use a unique temporary
-directory. Real alarms and the camera are verified manually on the device.
+Swift Testing (`@Test`, `#expect`, `#require`). IOKit power assertions, CoreAudio volume,
+`AVAudioEngine` sound, `SMAppService` and the wall-clock timer sit behind protocols and are replaced
+by fakes. `UserDefaults` tests use a unique suite (`UserDefaults(suiteName: "test-\(UUID().uuidString)")!`)
+and remove its persistent domain afterwards. The clock is injected (`now: Date` parameters), never
+read inside the logic under test. Tests run hosted in the app, whose `AppDelegate` builds nothing
+under a test run. Real sound, System sleep and the Ring window are verified manually on the Mac.
 
 ## Writing tests
 
