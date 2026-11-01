@@ -41,17 +41,26 @@ struct AlarmFormattingTests {
     }
 
     // 2026-11-01 is a Sunday.
-    @Test func whenLabelSaysTodayTomorrowOrTheWeekday() {
-        let calendar = TestCalendar.utc
-        let now = TestCalendar.date(2026, 11, 1, 22, 46)
+    private let sundayNight = TestCalendar.date(2026, 11, 1, 22, 46)
 
-        #expect(
-            AlarmFormatting.whenLabel(of: TestCalendar.date(2026, 11, 1, 23, 30), now: now, calendar: calendar) == "hoy"
-        )
-        #expect(
-            AlarmFormatting.whenLabel(of: TestCalendar.date(2026, 11, 2, 7), now: now, calendar: calendar) == "mañana")
-        #expect(AlarmFormatting.whenLabel(of: TestCalendar.date(2026, 11, 3, 7), now: now, calendar: calendar) == "mar")
-        #expect(AlarmFormatting.whenLabel(of: TestCalendar.date(2026, 11, 8, 7), now: now, calendar: calendar) == "dom")
+    @Test func whenLabelSaysTodayForTheSameDay() {
+        let laterToday = TestCalendar.date(2026, 11, 1, 23, 30)
+
+        #expect(AlarmFormatting.whenLabel(of: laterToday, now: sundayNight, calendar: TestCalendar.utc) == "hoy")
+    }
+
+    @Test func whenLabelSaysTomorrowForTheNextDay() {
+        let mondayMorning = TestCalendar.date(2026, 11, 2, 7)
+
+        #expect(AlarmFormatting.whenLabel(of: mondayMorning, now: sundayNight, calendar: TestCalendar.utc) == "mañana")
+    }
+
+    @Test func whenLabelGivesTheWeekdayAbbreviationFurtherAhead() {
+        let tuesday = TestCalendar.date(2026, 11, 3, 7)
+        let nextSunday = TestCalendar.date(2026, 11, 8, 7)
+
+        #expect(AlarmFormatting.whenLabel(of: tuesday, now: sundayNight, calendar: TestCalendar.utc) == "mar")
+        #expect(AlarmFormatting.whenLabel(of: nextSunday, now: sundayNight, calendar: TestCalendar.utc) == "dom")
     }
 
     @Test func tomorrowCrossesAMonthBoundary() {
@@ -77,9 +86,10 @@ struct AlarmFormattingTests {
         #expect(AlarmFormatting.countdown(from: now, to: now.addingTimeInterval(2 * 3600)) == "en 2 h 0 min")
     }
 
-    @Test func chipsAreMondayFirstWithTheFullDayNames() {
-        #expect(AlarmFormatting.chips.map(\.letter) == ["L", "M", "X", "J", "V", "S", "D"])
-        #expect(AlarmFormatting.chips.map(\.weekday) == Weekday.allCases)
-        #expect(AlarmFormatting.chips[2].name == "Miércoles")
+    @Test func weekdayLabelsGiveTheChipLetterTheFullNameAndTheAbbreviation() {
+        #expect(Weekday.allCases.map { AlarmFormatting.labels(of: $0).letter } == ["L", "M", "X", "J", "V", "S", "D"])
+        #expect(
+            AlarmFormatting.labels(of: .wednesday)
+                == AlarmFormatting.WeekdayLabels(letter: "X", name: "Miércoles", abbreviation: "mié"))
     }
 }

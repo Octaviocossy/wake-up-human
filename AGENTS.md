@@ -256,7 +256,7 @@ Re-running is idempotent (done children are detected from the epic branch).
 - `WakeUpHuman/Audio` — generated sounds (alarm tone, rain) and the system output volume
 - `WakeUpHuman/Power` — IOKit power assertions, display wake and the power source
 - `WakeUpHuman/UI/<Surface>` — `StatusItem`, `Panel`, `RingWindow`
-- `WakeUpHuman/Support` — logging, wall-clock deadline scheduling, login item
+- `WakeUpHuman/Support` — logging, wall-clock deadline scheduling, System sleep/wake and clock-change notifications, monotonic clock readings, login item
 - `WakeUpHuman/Resources` — the bundled word list; `WakeUpHuman/Assets.xcassets` — the app icon
 - `WakeUpHumanTests` — mirrors `WakeUpHuman`; fakes in `WakeUpHumanTests/Fakes`
 - `docs/design/` — the prototype's screens, the visual reference (spec decision 34)

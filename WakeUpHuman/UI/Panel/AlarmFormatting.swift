@@ -5,22 +5,28 @@ import Foundation
 /// They are product content, which S20 does not govern (ADR-0024); the copy is the prototype's,
 /// which governs copy where the spec is silent (spec decision 34).
 enum AlarmFormatting {
-    /// The editor's day chips, Monday-first: the one-letter label, and the full name that is the
-    /// chip's accessibility label.
-    static let chips: [(weekday: Weekday, letter: String, name: String)] = [
-        (.monday, "L", "Lunes"),
-        (.tuesday, "M", "Martes"),
-        (.wednesday, "X", "Miércoles"),
-        (.thursday, "J", "Jueves"),
-        (.friday, "V", "Viernes"),
-        (.saturday, "S", "Sábado"),
-        (.sunday, "D", "Domingo"),
-    ]
+    /// The Spanish labels of one weekday.
+    struct WeekdayLabels: Equatable, Sendable {
+        /// The editor chip's one-letter label.
+        let letter: String
+        /// The full name: the chip's accessibility label.
+        let name: String
+        /// The abbreviation the day lists and `whenLabel` use.
+        let abbreviation: String
+    }
 
-    private static let abbreviations: [Weekday: String] = [
-        .monday: "lun", .tuesday: "mar", .wednesday: "mié", .thursday: "jue",
-        .friday: "vie", .saturday: "sáb", .sunday: "dom",
-    ]
+    /// Every label of `weekday`, from one table.
+    static func labels(of weekday: Weekday) -> WeekdayLabels {
+        switch weekday {
+        case .monday: WeekdayLabels(letter: "L", name: "Lunes", abbreviation: "lun")
+        case .tuesday: WeekdayLabels(letter: "M", name: "Martes", abbreviation: "mar")
+        case .wednesday: WeekdayLabels(letter: "X", name: "Miércoles", abbreviation: "mié")
+        case .thursday: WeekdayLabels(letter: "J", name: "Jueves", abbreviation: "jue")
+        case .friday: WeekdayLabels(letter: "V", name: "Viernes", abbreviation: "vie")
+        case .saturday: WeekdayLabels(letter: "S", name: "Sábado", abbreviation: "sáb")
+        case .sunday: WeekdayLabels(letter: "D", name: "Domingo", abbreviation: "dom")
+        }
+    }
 
     private static let workdays: Set<Weekday> = [.monday, .tuesday, .wednesday, .thursday, .friday]
     private static let weekend: Set<Weekday> = [.saturday, .sunday]
@@ -37,7 +43,7 @@ enum AlarmFormatting {
         if weekdays.count == Weekday.allCases.count { return "Todos los días" }
         if weekdays == workdays { return "Lun a vie" }
         if weekdays == weekend { return "Sáb y dom" }
-        let list = weekdays.sorted().compactMap { abbreviations[$0] }.joined(separator: ", ")
+        let list = weekdays.sorted().map { labels(of: $0).abbreviation }.joined(separator: ", ")
         return list.prefix(1).uppercased() + list.dropFirst()
     }
 
@@ -56,7 +62,7 @@ enum AlarmFormatting {
         {
             return "mañana"
         }
-        return Weekday(rawValue: calendar.component(.weekday, from: date)).flatMap { abbreviations[$0] } ?? ""
+        return Weekday(rawValue: calendar.component(.weekday, from: date)).map { labels(of: $0).abbreviation } ?? ""
     }
 
     /// The time left, rounded **up** to whole minutes: `"en 8 h 14 min"`, `"en 14 min"`.

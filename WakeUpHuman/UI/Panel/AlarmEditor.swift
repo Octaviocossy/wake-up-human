@@ -53,9 +53,9 @@ struct AlarmEditor: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(PanelStyle.secondaryText)
                 HStack(spacing: 0) {
-                    ForEach(AlarmFormatting.chips, id: \.weekday) { chip in
-                        dayChip(weekday: chip.weekday, letter: chip.letter, name: chip.name)
-                        if chip.weekday != AlarmFormatting.chips.last?.weekday { Spacer(minLength: 0) }
+                    ForEach(Weekday.allCases, id: \.self) { weekday in
+                        dayChip(weekday)
+                        if weekday != Weekday.allCases.last { Spacer(minLength: 0) }
                     }
                 }
                 Text(AlarmFormatting.repeatHint(weekdays))
@@ -86,12 +86,13 @@ struct AlarmEditor: View {
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(EditorColors.cardOutline))
     }
 
-    private func dayChip(weekday: Weekday, letter: String, name: String) -> some View {
+    private func dayChip(_ weekday: Weekday) -> some View {
         let isOn = weekdays.contains(weekday)
+        let labels = AlarmFormatting.labels(of: weekday)
         return Button {
             if isOn { weekdays.remove(weekday) } else { weekdays.insert(weekday) }
         } label: {
-            Text(letter)
+            Text(labels.letter)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(isOn ? EditorColors.onAccent : PanelStyle.primaryText)
                 .frame(width: 38, height: 38)
@@ -100,7 +101,7 @@ struct AlarmEditor: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(name)
+        .accessibilityLabel(labels.name)
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 

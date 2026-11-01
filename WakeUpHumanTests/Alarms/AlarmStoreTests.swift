@@ -50,14 +50,22 @@ struct AlarmStoreTests {
         #expect(store.alarms.map(\.time.hour) == [7, 9])
     }
 
-    @Test func setArmedArmsAndDisarms() throws {
+    @Test func setArmedFalseDisarmsTheAlarm() throws {
         let store = AlarmStore(defaults: suite.defaults)
         let alarm = store.add(time: TimeOfDay(hour: 7, minute: 0), weekdays: [])
 
         store.setArmed(false, id: alarm.id)
+
         #expect(try #require(store.alarms.first).isArmed == false)
+    }
+
+    @Test func setArmedTrueArmsADisarmedAlarm() throws {
+        let store = AlarmStore(defaults: suite.defaults)
+        let alarm = store.add(time: TimeOfDay(hour: 7, minute: 0), weekdays: [])
+        store.setArmed(false, id: alarm.id)
 
         store.setArmed(true, id: alarm.id)
+
         #expect(try #require(store.alarms.first).isArmed)
     }
 

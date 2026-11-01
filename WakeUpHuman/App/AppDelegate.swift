@@ -23,11 +23,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         alarmStore.onChange = { [weak scheduler] in scheduler?.alarmsDidChange(now: Date()) }
         self.alarmStore = alarmStore
         occurrenceScheduler = scheduler
-        // Around System sleep and wake: a wake evaluates late, so what fell due during the sleep is
-        // reported as missed and never rung (invariant 5).
+        // Around System sleep: whatever fell due during it is reported as missed on wake, and never
+        // rung (invariant 5).
         systemEvents = SystemEventObserver(
-            willSleep: { [weak scheduler] in scheduler?.evaluate(now: Date()) },
-            didWake: { [weak scheduler] in scheduler?.evaluate(now: Date(), missedCause: .systemSleep) },
+            willSleep: { [weak scheduler] in scheduler?.systemWillSleep(now: Date()) },
+            didWake: { [weak scheduler] in scheduler?.systemDidWake(now: Date()) },
             clockDidChange: { [weak scheduler] in scheduler?.clockDidChange(now: Date()) }
         )
         scheduler.start(now: Date())
