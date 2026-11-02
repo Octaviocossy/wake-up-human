@@ -1,0 +1,77 @@
+name: Bug report
+description: Something did not work — an Alarm that did not ring, a Ring that would not Dismiss, a crash.
+title: "fix: "
+labels: ["type:fix"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Most "it did not ring" reports come down to System sleep: an Alarm rings only if the Mac is awake, and only Bedtime keeps it awake. Please read [Before you rely on it](https://github.com/Octaviocossy/wake-up-human#before-you-rely-on-it) first.
+
+        Please write in English; Spanish is fine too.
+  - type: input
+    id: app-version
+    attributes:
+      label: Wake Up Human version
+      description: The release you installed (for example 1.0.1), or the commit if you built from source.
+    validations:
+      required: true
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: "26.1"
+    validations:
+      required: true
+  - type: input
+    id: mac-model
+    attributes:
+      label: Mac model
+      placeholder: MacBook Air (M2, 2022)
+    validations:
+      required: true
+  - type: dropdown
+    id: bedtime
+    attributes:
+      label: Was Bedtime ("Modo dormir") on?
+      options:
+        - "Yes"
+        - "No"
+        - Not relevant to this bug
+    validations:
+      required: true
+  - type: dropdown
+    id: power
+    attributes:
+      label: Lid and power
+      options:
+        - Lid open, plugged in
+        - Lid open, on battery
+        - Lid closed
+        - Desktop Mac (no lid)
+        - Not relevant to this bug
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Arm an Alarm for 07:00 on weekdays
+        2. Turn on Modo dormir at 23:00
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (optional)
+      description: |
+        Output of `log show --last 12h --predicate 'subsystem == "com.ovct.wakeuphuman"'`, trimmed to the relevant part.
+      render: text

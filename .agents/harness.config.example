@@ -21,7 +21,7 @@
 #           Issues and epics are plan files under .agents/plans/, identified local-<n>, and
 #           the epic branch stays on this machine until you push it yourself.
 # Every command states the active mode before it writes anything.
-USE_GITHUB=true
+USE_GITHUB=false
 
 # Headless agent CLI used to implement each child issue. COMMAND PREFIX: the runner
 # appends the issue prompt as the final quoted positional argument.
