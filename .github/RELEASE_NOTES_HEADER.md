@@ -1,27 +1,28 @@
 ## Install
 
 1. Download the `.dmg` below.
-2. Open it and drag **WakeUpHuman** onto **Applications**.
-3. macOS refuses to open it the first time, because it is not signed with an Apple Developer ID.
-   Get past it either via **System Settings › Privacy & Security › Open Anyway**, or by running:
+2. Open the disk image and drag **WakeUpHuman** into **Applications**.
+3. Open WakeUpHuman from `/Applications`. macOS blocks the first launch, because the app is ad-hoc
+   signed and not notarized. Open **System Settings > Privacy & Security**, find the message about
+   WakeUpHuman, and select **Open Anyway**, or remove the quarantine attribute in Terminal:
 
    ```sh
    xattr -dr com.apple.quarantine /Applications/WakeUpHuman.app
    ```
 
-   The old Control-click → Open shortcut no longer works.
+   Control-clicking the app and choosing Open no longer bypasses this warning.
 
-Install it into `/Applications`: **launch at login** is on by default, and `SMAppService` registers
-it reliably only from there.
+Installing the app in `/Applications` is also required for reliable **Launch at Login**, which is
+on by default.
 
-**Before you rely on it.** An Alarm rings only if the Mac is awake at that time. Turn on Bedtime
-(the "Modo dormir" switch in the menu-bar panel) at night, and leave the lid open and the Mac
-plugged in. The app never wakes a sleeping Mac. With FileVault on, a restart overnight stops at the
-login screen, and that morning's Alarm cannot ring.
+## Before you rely on it
 
-Ad-hoc signed and not notarized on purpose: a personal app with no Apple Developer membership.
+An Alarm rings only if the Mac is awake. Turn on Bedtime (the **Modo dormir** switch in the
+menu-bar panel) at night, and leave the lid open and the Mac plugged in: the app never wakes a
+sleeping Mac. With FileVault on, a restart overnight stops at the login screen, and that morning's
+Alarm cannot ring. Details: [Before you rely on it](https://github.com/Octaviocossy/wake-up-human#before-you-rely-on-it).
 
-Requires macOS 26 or later. Universal (Apple Silicon and Intel). It lives in the menu bar, with no
-Dock icon.
+Requires macOS 26 or later. Universal (Apple Silicon and Intel). The app lives in the menu bar,
+with no Dock icon, and its interface is in Spanish.
 
 ---

@@ -76,7 +76,7 @@
 - Tests are hosted in the app. `AppDelegate` builds nothing when `AppEnvironment.isRunningTests` is true, so a test run never schedules a real Alarm, plays sound, changes the system volume, takes a power assertion or registers a login item. Keep every new side effect behind that guard.
 - Sound, the volume ramp, System sleep, display wake and the Ring window are verified by hand on the Mac; unit tests cover the logic behind protocols.
 - No `DEVELOPMENT_TEAM` is needed: builds are signed to run locally (ad-hoc).
-- CI (`.github/workflows/ci.yml`) runs on pull requests only, on `macos-26` with the latest stable Xcode (spec decision 30): the repository is private and macOS minutes count ten-fold, so never add push or `epic/**` triggers.
+- CI (`.github/workflows/ci.yml`) runs on pull requests and on pushes to `main`, on `macos-26` with the latest stable Xcode (`.agents/specs/2026-11-02-open-source-readme.md` decision 2, superseding the macOS spec's decision 30): the repository is public, so standard macOS runners are free, and a run on `main` gives the README's CI badge a status. Never add an `epic/**` trigger: every epic child already builds and tests in the local review gate.
 - The app icon is generated: change the constants in `Tools/make-appicon.swift`, run `swift Tools/make-appicon.swift` and commit the output; never hand-edit `AppIcon.appiconset`.
 
 ## Skills
@@ -263,3 +263,4 @@ Re-running is idempotent (done children are detected from the epic branch).
 - `WakeUpHuman/Resources` — the bundled word list; `WakeUpHuman/Assets.xcassets` — the app icon
 - `WakeUpHumanTests` — mirrors `WakeUpHuman`; fakes in `WakeUpHumanTests/Fakes`
 - `docs/design/` — the prototype's screens, the visual reference (spec decision 34)
+- `docs/images/` — the README's screenshots, captured by hand from the running app

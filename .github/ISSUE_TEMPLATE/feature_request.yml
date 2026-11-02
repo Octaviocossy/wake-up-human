@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest a new capability or a change in behavior.
+title: "feat: "
+labels: ["type:feat"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before you start, check the [Non-goals](https://github.com/Octaviocossy/wake-up-human#non-goals): no snooze, no network access, never waking a sleeping Mac, no Developer ID signing, notarization or Mac App Store, no audio files. Requests for those will be closed.
+
+        Please write in English; Spanish is fine too.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: The proposal
+      description: What should Wake Up Human do instead?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (optional)
+  - type: checkboxes
+    id: non-goals
+    attributes:
+      label: Non-goals
+      options:
+        - label: This request is not one of the Non-goals listed in the README.
+          required: true
